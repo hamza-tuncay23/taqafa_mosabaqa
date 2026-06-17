@@ -81,13 +81,18 @@
         .btn-warning:hover {
             background: #9a7018;
         }
-        input, select {
+        input, select, textarea {
             padding: 12px 16px;
             border-radius: 40px;
             border: 1px solid #ccd7e4;
             font-size: 1rem;
             width: 100%;
             margin: 6px 0;
+        }
+        textarea {
+            border-radius: 20px;
+            min-height: 100px;
+            resize: vertical;
         }
         .flex-row {
             display: flex;
@@ -147,12 +152,6 @@
             background: #e5edf5;
             color: #102433;
         }
-        .score-input {
-            width: 70px;
-            text-align: center;
-            border-radius: 30px;
-            padding: 8px;
-        }
         .page {
             display: none;
         }
@@ -165,12 +164,7 @@
         .mt-3 { margin-top: 25px; }
         .mb-2 { margin-bottom: 15px; }
         .text-danger { color: #b33; }
-        .badge {
-            background: #d7e3ed;
-            padding: 4px 14px;
-            border-radius: 30px;
-            font-size: 0.9rem;
-        }
+        .text-success { color: #1d7a4b; }
         .alert {
             background: #fce4e4;
             color: #a11;
@@ -184,12 +178,6 @@
             padding: 20px;
             border: 1px solid #d3dfe9;
         }
-        .admin-panel textarea {
-            width: 100%;
-            border-radius: 20px;
-            padding: 12px;
-            border: 1px solid #cbd8e5;
-        }
         .flex-between {
             display: flex;
             justify-content: space-between;
@@ -198,7 +186,6 @@
         }
         .hidden { display: none; }
         
-        /* تعديلات جديدة: تكبير الخط وتوسيط الأسئلة */
         .question-item {
             font-size: 1.8rem;
             text-align: center;
@@ -208,11 +195,6 @@
             border-radius: 20px;
             border-right: 6px solid #1e7e83;
             list-style: none;
-        }
-        .question-item::before {
-            content: "• ";
-            color: #1e7e83;
-            font-size: 2rem;
         }
         #questions-list {
             padding: 0;
@@ -228,7 +210,6 @@
             list-style: none;
         }
         
-        /* معلومات التواصل */
         .contact-info {
             background: #eaf0f7;
             border-radius: 20px;
@@ -244,6 +225,25 @@
             color: #1e7e83;
         }
 
+        .question-list-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 8px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 15px;
+            border: 1px solid #e2eaf1;
+        }
+        .question-list-item input {
+            flex: 1;
+            margin: 0;
+        }
+        .question-list-item .btn-danger {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
         @media (max-width: 700px) {
             .container { padding: 20px 12px; }
             .question-item, #questions-list li {
@@ -255,7 +255,7 @@
 </head>
 <body>
     <div class="container" id="app">
-        <!-- الصفحة الرئيسية (الترحيب) -->
+        <!-- الصفحة الرئيسية -->
         <div id="page-home" class="page active">
             <div class="center">
                 <h1 style="font-size: 2.8rem;">🏆 المسابقة الثقافية</h1>
@@ -263,14 +263,11 @@
                 <div style="background: #eaf0f7; border-radius: 40px; padding: 18px; max-width: 550px; margin: 0 auto 30px;">
                     <p style="font-weight: 500;">📌 سيتم عرض النتائج مباشرة، وتحديث الترتيب تلقائياً بعد كل جولة.</p>
                 </div>
-                
-                <!-- معلومات التواصل الجديدة -->
                 <div class="contact-info">
-                    <p>📞 <strong>للتواصل:</strong>631909130 212+</p>
+                    <p>📞 <strong>للتواصل:</strong> +212 631909130</p>
                     <p>📱 <strong>Instagram:</strong> ctrlaltstudy</p>
                     <p style="font-size: 0.95rem; color: #3c5a73;">للمزيد من المعلومات، يرجى الاتصال بـ BDE</p>
                 </div>
-                
                 <button class="btn btn-success" id="btn-start" style="font-size: 1.6rem; padding: 18px 50px;">ابدأ المسابقة</button>
             </div>
         </div>
@@ -299,12 +296,11 @@
                 <button class="btn btn-secondary" id="btn-back-domains">رجوع للرئيسية</button>
                 <button class="btn btn-warning" id="btn-tiebreaker">⚖️ الاحتياط</button>
             </div>
-            <!-- جدول النقاط -->
             <h3 style="margin-top: 35px;">جدول الترتيب العام</h3>
             <div id="score-table-wrapper"></div>
         </div>
 
-        <!-- صفحة الأسئلة (لمجال معين) -->
+        <!-- صفحة الأسئلة -->
         <div id="page-questions" class="page">
             <h2 id="domain-title" style="text-align: center;">المجال: </h2>
             <div id="questions-list"></div>
@@ -314,7 +310,7 @@
             </div>
         </div>
 
-        <!-- صفحة إدخال النقاط لكل فريق -->
+        <!-- صفحة إدخال النقاط -->
         <div id="page-score" class="page">
             <h2>إدخال النقاط</h2>
             <p>أدخل عدد النقاط من 5 لكل فريق في هذه الجولة</p>
@@ -323,7 +319,7 @@
             <button class="btn btn-secondary" id="btn-back-domains-from-score">رجوع</button>
         </div>
 
-        <!-- صفحة الترتيب بعد الجولة -->
+        <!-- صفحة الترتيب -->
         <div id="page-ranking" class="page">
             <h2>ترتيب الجولة الحالية</h2>
             <div id="ranking-table"></div>
@@ -338,10 +334,10 @@
             </div>
         </div>
 
-        <!-- صفحة الاحتياط (التعادل) -->
+        <!-- صفحة الاحتياط -->
         <div id="page-tiebreaker" class="page">
             <h2>⚖️ جولة الاحتياط</h2>
-            <p>تم التعادل بين بعض الفرق، سيتم طرح 3 أسئلة لتحديد الفائز.</p>
+            <p id="tie-info">تم التعادل بين بعض الفرق، سيتم طرح 3 أسئلة عشوائية لتحديد الفائز.</p>
             <div id="tie-teams-list"></div>
             <div id="tie-questions"></div>
             <div style="text-align: center; margin-top: 20px;">
@@ -357,12 +353,20 @@
             <input type="password" id="admin-password" placeholder="كلمة المرور" style="max-width: 280px;">
             <button class="btn" id="btn-admin-login">دخول</button>
             <div id="admin-content" class="hidden" style="margin-top: 25px;">
-                <h3>تعديل الأسئلة</h3>
+                <h3>📝 قائمة الأسئلة العشوائية للاحتياط</h3>
+                <p style="color: #3c5a73;">أضف أكبر عدد ممكن من الأسئلة، سيتم اختيار 3 عشوائياً عند الحاجة.</p>
+                <div id="tie-questions-list"></div>
+                <div class="flex-row" style="margin: 15px 0;">
+                    <input type="text" id="new-tie-question" placeholder="أدخل سؤال جديد..." style="flex:1; max-width:400px;">
+                    <button class="btn btn-success" id="btn-add-tie-question">➕ إضافة</button>
+                </div>
+                <hr>
+                <h3>تعديل أسئلة المجالات</h3>
                 <div id="admin-domains-list"></div>
                 <hr>
                 <h3>سجل المباريات</h3>
                 <div id="history-log" style="background: #eef3f8; border-radius: 20px; padding: 16px; max-height: 200px; overflow-y: auto;"></div>
-                <button class="btn btn-secondary" id="btn-admin-close">إغلاق</button>
+                <button class="btn btn-secondary" id="btn-admin-close" style="margin-top:15px;">إغلاق</button>
             </div>
         </div>
     </div>
@@ -370,13 +374,13 @@
     <script>
         (function(){
             // --------------------------------------------------------------
-            // البيانات الأساسية (محفوظة في localStorage)
+            // البيانات الأساسية
             // --------------------------------------------------------------
             const STORAGE_KEY = 'quiz_competition_data';
             const DEFAULT_DATA = {
                 teams: ['', '', '', '', ''],
                 members: [[], [], [], [], []],
-                scores: { // domainIndex -> array of 5 scores (each 0-5)
+                scores: {
                     0: [0,0,0,0,0],
                     1: [0,0,0,0,0],
                     2: [0,0,0,0,0],
@@ -384,15 +388,25 @@
                     4: [0,0,0,0,0],
                     5: [0,0,0,0,0]
                 },
-                playedDomains: [], // indices 0-5
+                playedDomains: [],
                 currentDomain: null,
-                tieScores: [0,0,0,0,0],
-                tieQuestions: [],
                 history: [],
                 winner: null,
                 tieMode: false,
-                tieRound: 0, // عدد جولات الاحتياط
-                // أسئلة كل مجال (مصفوفة من 5 أسئلة)
+                tieRound: 0,
+                // قائمة الأسئلة العشوائية للاحتياط
+                tieQuestionsPool: [
+                    'ما هو عاصمة المغرب؟',
+                    'كم عدد ألوان قوس قزح؟',
+                    'ما هو الكوكب الأقرب للشمس؟',
+                    'من هو مؤسس الدولة العثمانية؟',
+                    'ما هي أكبر قارة في العالم؟',
+                    'متى كانت معركة حطين؟',
+                    'ما هي عاصمة اليابان؟',
+                    'من هو مخترع الهاتف؟',
+                    'ما هي أسرع رياضة في العالم؟',
+                    'كم عدد أيام السنة الهجرية؟'
+                ],
                 questions: {
                     0: ['سؤال ديني 1', 'سؤال ديني 2', 'سؤال ديني 3', 'سؤال ديني 4', 'سؤال ديني 5'],
                     1: ['سؤال ثقافي 1', 'سؤال ثقافي 2', 'سؤال ثقافي 3', 'سؤال ثقافي 4', 'سؤال ثقافي 5'],
@@ -405,11 +419,8 @@
             };
 
             let data = loadData();
-            let currentPage = 'page-home';
-            let domainBeingPlayed = null; // index
-            let rankingOrder = [];
+            let domainBeingPlayed = null;
 
-            // عناصر الصفحات
             const pages = {
                 home: document.getElementById('page-home'),
                 teams: document.getElementById('page-teams'),
@@ -451,15 +462,10 @@
                         total += data.scores[d][teamIdx];
                     }
                 }
-                // إضافة نقاط الاحتياط (المجال 6)
                 if (data.scores[6] && data.scores[6][teamIdx] !== undefined) {
                     total += data.scores[6][teamIdx];
                 }
                 return total;
-            }
-
-            function getScoresForDomain(dIdx) {
-                return data.scores[dIdx] || [0,0,0,0,0];
             }
 
             function isDomainPlayed(dIdx) {
@@ -470,14 +476,12 @@
                 return data.playedDomains.length === 6;
             }
 
-            // ترتيب الفرق حسب المجموع
             function getRankedTeams() {
                 const indices = [0,1,2,3,4];
                 indices.sort((a,b) => getTotalScore(b) - getTotalScore(a));
                 return indices;
             }
 
-            // تحديد الفرق المتعادلة على المركز الأول
             function getTiedTeams() {
                 const ranked = getRankedTeams();
                 if (ranked.length === 0) return [];
@@ -485,25 +489,39 @@
                 return ranked.filter(idx => getTotalScore(idx) === topScore);
             }
 
-            // تحديد الفائز (إذا لم يكن هناك تعادل)
             function getWinnerIndex() {
                 const tied = getTiedTeams();
                 if (tied.length === 1) return tied[0];
-                return null; // تعادل
+                return null;
             }
 
-            // ------------------- عرض الصفحات -------------------
+            // دالة لاختيار 3 أسئلة عشوائية من القائمة
+            function getRandomTieQuestions() {
+                const pool = data.tieQuestionsPool || [];
+                if (pool.length < 3) {
+                    // إذا كان هناك أقل من 3 أسئلة، نضيف أسئلة افتراضية
+                    const defaultQs = ['سؤال احتياط 1', 'سؤال احتياط 2', 'سؤال احتياط 3'];
+                    return defaultQs;
+                }
+                // خلط القائمة واختيار 3
+                const shuffled = [...pool];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled.slice(0, 3);
+            }
+
             function showPage(pageId) {
                 for (let key in pages) {
                     pages[key].classList.remove('active');
                 }
                 const el = document.getElementById(pageId);
                 if (el) el.classList.add('active');
-                currentPage = pageId;
                 window.scrollTo(0,0);
             }
 
-            // ------------------- عرض الفرق في صفحة التسجيل -------------------
+            // ------------------- عرض الفرق -------------------
             function renderTeamsInput() {
                 const container = document.getElementById('teams-container');
                 let html = '';
@@ -585,7 +603,7 @@
                 showPage('page-questions');
             }
 
-            // ------------------- صفحة إدخال النقاط -------------------
+            // ------------------- إدخال النقاط -------------------
             function showScoreInput(domainIdx) {
                 const container = document.getElementById('score-inputs');
                 let html = '';
@@ -600,9 +618,9 @@
                 showPage('page-score');
             }
 
-            // ------------------- عرض ترتيب الجولة -------------------
+            // ------------------- عرض الترتيب -------------------
             function showRanking(domainIdx) {
-                const scores = getScoresForDomain(domainIdx);
+                const scores = data.scores[domainIdx] || [0,0,0,0,0];
                 const teamsWithScores = scores.map((s, idx) => ({ idx, score: s, name: getTeamName(idx) }));
                 teamsWithScores.sort((a,b) => b.score - a.score);
                 let html = `<table>
@@ -633,7 +651,6 @@
                         html += `<td>${val}</td>`;
                         total += val;
                     }
-                    // نقاط الاحتياط
                     const tieVal = (data.scores[6] && data.scores[6][t] !== undefined) ? data.scores[6][t] : 0;
                     html += `<td>${tieVal}</td>`;
                     total += tieVal;
@@ -645,7 +662,7 @@
 
             // ------------------- التحقق من الفائز -------------------
             function checkWinner() {
-                if (!allDomainsPlayed()) return;
+                if (!allDomainsPlayed()) return false;
                 const winnerIdx = getWinnerIndex();
                 if (winnerIdx !== null) {
                     data.winner = winnerIdx;
@@ -657,18 +674,16 @@
                 return false;
             }
 
-            // ------------------- الاحتياط (التعادل) -------------------
+            // ------------------- الاحتياط -------------------
             function showTiebreaker() {
                 const tied = getTiedTeams();
                 if (tied.length < 2) {
-                    // لا يوجد تعادل
                     return;
                 }
                 
                 data.tieMode = true;
                 data.tieRound = (data.tieRound || 0) + 1;
                 
-                // عرض الفرق المتعادلة
                 let html = `<h4>الفرق المتعادلة (جولة الاحتياط ${data.tieRound}):</h4><ul>`;
                 tied.forEach(idx => {
                     html += `<li>${getTeamName(idx)} - المجموع: ${getTotalScore(idx)}</li>`;
@@ -676,22 +691,17 @@
                 html += '</ul>';
                 document.getElementById('tie-teams-list').innerHTML = html;
 
-                // عرض 3 أسئلة جديدة مع أرقام مختلفة
-                const tieQs = [
-                    `سؤال احتياط ${data.tieRound}-1`, 
-                    `سؤال احتياط ${data.tieRound}-2`, 
-                    `سؤال احتياط ${data.tieRound}-3`
-                ];
+                // اختيار 3 أسئلة عشوائية من القائمة
+                const randomQuestions = getRandomTieQuestions();
                 
                 let qHtml = '<div style="margin:15px 0;">';
-                tieQs.forEach((q, idx) => {
+                randomQuestions.forEach((q, idx) => {
                     qHtml += `<div style="font-size:1.3rem; text-align:center; padding:15px; background:#f8fafc; border-radius:15px; margin:10px 0; border-right:4px solid #b8861e;">
                         <strong>${idx+1}. ${q}</strong>
                     </div>`;
                 });
                 qHtml += '</div>';
                 
-                // إضافة مدخلات النقاط للفرق المتعادلة
                 qHtml += '<div style="margin:20px 0;"><h4>أدخل نقاط الاحتياط (من 3) لكل فريق:</h4>';
                 tied.forEach((tIdx) => {
                     qHtml += `<div style="display:flex; gap:12px; align-items:center; margin:6px 0;">
@@ -705,13 +715,48 @@
                 showPage('page-tiebreaker');
             }
 
+            // ------------------- لوحة الإدارة: عرض قائمة الأسئلة -------------------
+            function renderTieQuestionsList() {
+                const container = document.getElementById('tie-questions-list');
+                const pool = data.tieQuestionsPool || [];
+                if (pool.length === 0) {
+                    container.innerHTML = '<p style="color:#888;">لا توجد أسئلة، أضف بعض الأسئلة في الحقل أدناه.</p>';
+                    return;
+                }
+                let html = '';
+                pool.forEach((q, idx) => {
+                    html += `<div class="question-list-item">
+                        <span style="font-weight:bold; min-width:30px;">${idx+1}.</span>
+                        <input type="text" value="${q}" class="tie-question-edit" data-idx="${idx}">
+                        <button class="btn btn-danger" data-idx="${idx}" onclick="removeTieQuestion(${idx})">✖</button>
+                    </div>`;
+                });
+                container.innerHTML = html;
+                
+                // ربط التعديل
+                document.querySelectorAll('.tie-question-edit').forEach(inp => {
+                    inp.addEventListener('change', function(){
+                        const idx = parseInt(this.dataset.idx);
+                        data.tieQuestionsPool[idx] = this.value;
+                        saveData();
+                    });
+                });
+            }
+
+            // دالة لحذف سؤال (تُستخدم في onclick)
+            window.removeTieQuestion = function(idx) {
+                if (confirm('هل أنت متأكد من حذف هذا السؤال؟')) {
+                    data.tieQuestionsPool.splice(idx, 1);
+                    saveData();
+                    renderTieQuestionsList();
+                }
+            };
+
             // ------------------- بدء المسابقة -------------------
             function init() {
                 const hasTeams = data.teams.some(t => t.trim() !== '');
                 if (hasTeams && allDomainsPlayed()) {
-                    // التحقق من الفائز
                     if (!checkWinner()) {
-                        // تعادل
                         showTiebreaker();
                     }
                 } else if (hasTeams) {
@@ -832,14 +877,12 @@
                         return;
                     }
                     
-                    // إضافة نقاط الاحتياط (المجال 6)
                     if (!data.scores[6]) data.scores[6] = [0,0,0,0,0];
                     for (let team in scores) {
                         data.scores[6][parseInt(team)] = (data.scores[6][parseInt(team)] || 0) + scores[team];
                     }
                     saveData();
                     
-                    // التحقق من الفائز بعد الإضافة
                     const winnerIdx = getWinnerIndex();
                     if (winnerIdx !== null) {
                         data.winner = winnerIdx;
@@ -847,8 +890,7 @@
                         document.getElementById('winner-name').textContent = getTeamName(winnerIdx);
                         showPage('page-winner');
                     } else {
-                        // لا يزال هناك تعادل، نكرر الاحتياط
-                        alert('لا يزال هناك تعادل، سيتم تكرار جولة الاحتياط.');
+                        alert('لا يزال هناك تعادل، سيتم تكرار جولة الاحتياط بأسئلة جديدة.');
                         showTiebreaker();
                     }
                 });
@@ -860,25 +902,45 @@
                     }
                 });
 
+                // ------------------- الإدارة -------------------
                 document.getElementById('btn-admin').addEventListener('click', function(){
                     showPage('page-admin');
+                    renderTieQuestionsList();
                 });
+                
                 document.getElementById('btn-admin-login').addEventListener('click', function(){
                     const pass = document.getElementById('admin-password').value;
                     if (pass === data.adminPassword) {
                         document.getElementById('admin-content').classList.remove('hidden');
                         loadAdminContent();
+                        renderTieQuestionsList();
                     } else {
                         alert('كلمة مرور خاطئة');
                     }
                 });
+                
                 document.getElementById('btn-admin-close').addEventListener('click', function(){
                     showPage('page-domains');
                     renderDomains();
                 });
+
+                // إضافة سؤال جديد للاحتياط
+                document.getElementById('btn-add-tie-question').addEventListener('click', function(){
+                    const input = document.getElementById('new-tie-question');
+                    const question = input.value.trim();
+                    if (!question) {
+                        alert('الرجاء كتابة سؤال.');
+                        return;
+                    }
+                    if (!data.tieQuestionsPool) data.tieQuestionsPool = [];
+                    data.tieQuestionsPool.push(question);
+                    saveData();
+                    input.value = '';
+                    renderTieQuestionsList();
+                });
             }
 
-            // ------------------- لوحة الإدارة -------------------
+            // ------------------- تحميل محتوى الإدارة -------------------
             function loadAdminContent() {
                 const container = document.getElementById('admin-domains-list');
                 const domainNames = ['ديني','ثقافي','تاريخي','جغرافي','علمي','رياضي'];
@@ -903,6 +965,7 @@
                         saveData();
                     });
                 });
+                
                 const historyDiv = document.getElementById('history-log');
                 let histHtml = '';
                 data.history.forEach(h => {
