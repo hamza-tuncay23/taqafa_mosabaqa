@@ -193,6 +193,51 @@
             to { opacity: 0.6; transform: scale(0.95); }
         }
 
+        /* ===== Timer Ended Message ===== */
+        .timer-ended-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .timer-ended-overlay.active {
+            display: flex;
+        }
+        .timer-ended-box {
+            background: var(--bg-secondary);
+            padding: 40px 50px;
+            border-radius: 30px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: popIn 0.5s ease;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .timer-ended-box .icon {
+            font-size: 4rem;
+        }
+        .timer-ended-box h2 {
+            font-size: 2rem;
+            color: var(--timer-warning);
+            margin: 15px 0;
+        }
+        .timer-ended-box p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+        .timer-ended-box .btn {
+            margin-top: 20px;
+        }
+
         /* ===== Question Answer Buttons ===== */
         .question-answer-row {
             display: flex;
@@ -570,6 +615,16 @@
         <span id="themeLabel">ليلي</span>
     </button>
 
+    <!-- ===== Timer Ended Overlay ===== -->
+    <div class="timer-ended-overlay" id="timerEndedOverlay">
+        <div class="timer-ended-box">
+            <div class="icon">⏰</div>
+            <h2>انتهى الوقت!</h2>
+            <p>يمكنك الآن تعديل الإجابات يدوياً عن طريق الضغط على الأزرار.</p>
+            <button class="btn btn-success" onclick="closeTimerEnded()">✅ موافق</button>
+        </div>
+    </div>
+
     <div class="container" id="app">
         <!-- ===== PAGE HOME ===== -->
         <div id="page-home" class="page active">
@@ -641,19 +696,8 @@
             <div id="questions-list"></div>
             
             <div class="center" style="margin-top: 20px;">
-                <button class="btn btn-warning" id="btn-time-end">⏰ انتهى الوقت</button>
+                <button class="btn btn-success" id="btn-submit-answers">✅ تأكيد النتائج</button>
                 <button class="btn btn-secondary" id="btn-back-domains-from-q">🔙 رجوع</button>
-            </div>
-        </div>
-
-        <!-- ===== PAGE MANUAL SCORE ===== -->
-        <div id="page-manual-score" class="page">
-            <h2>✏️ إدخال النقاط يدوياً</h2>
-            <p style="color: var(--text-muted);">أدخل عدد الإجابات الصحيحة لكل فريق (من 0 إلى 5)</p>
-            <div id="manual-score-container"></div>
-            <div class="center" style="margin-top: 20px;">
-                <button class="btn btn-success" id="btn-confirm-manual-score">✅ تأكيد النقاط</button>
-                <button class="btn btn-secondary" id="btn-back-domains-from-manual">🔙 رجوع</button>
             </div>
         </div>
 
@@ -696,7 +740,6 @@
             </div>
             <div id="admin-content" class="hidden" style="margin-top: 25px;">
                 
-                <!-- ===== Liste des questions aléatoires ===== -->
                 <h3>📝 قائمة الأسئلة العشوائية للاحتياط</h3>
                 <p style="color: var(--text-muted);">أضف أكبر عدد ممكن من الأسئلة، سيتم اختيار 3 عشوائياً عند الحاجة.</p>
                 <div id="tie-questions-list"></div>
@@ -706,12 +749,10 @@
                 </div>
                 <hr>
                 
-                <!-- ===== Modification des questions des domaines ===== -->
                 <h3>📚 تعديل أسئلة المجالات</h3>
                 <div id="admin-domains-list"></div>
                 <hr>
                 
-                <!-- ===== Historique ===== -->
                 <h3>📜 سجل المباريات</h3>
                 <div id="history-log" style="background: var(--bg-input); border-radius: 20px; padding: 16px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color);"></div>
                 
@@ -761,8 +802,8 @@
             let timeLeft = 180;
             let isTimerRunning = false;
             let currentAnswers = {};
-            let manualScores = [0, 0, 0, 0, 0];
             let isTimeEnded = false;
+            let backgroundMusic = null;
 
             // ======================== AUDIO ========================
             function playSound(type) {
@@ -810,6 +851,67 @@
                         }, 200);
                     }
                 } catch(e) {}
+            }
+
+            // ===== MUSIQUE D'AMBIANCE (HAMAS) =====
+            function playBackgroundMusic() {
+                try {
+                    // Arrêter la musique précédente
+                    if (backgroundMusic) {
+                        backgroundMusic.pause();
+                        backgroundMusic = null;
+                    }
+                    
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Créer une boucle de notes pour une ambiance "حماسية"
+                    let notes = [523, 587, 659, 784, 880, 988, 1047];
+                    let noteIndex = 0;
+                    let isPlaying = true;
+                    
+                    function playNextNote() {
+                        if (!isPlaying) return;
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        
+                        osc.frequency.value = notes[noteIndex % notes.length];
+                        osc.type = 'square';
+                        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                        
+                        osc.start(ctx.currentTime);
+                        osc.stop(ctx.currentTime + 0.15);
+                        
+                        noteIndex++;
+                        
+                        // Jouer la note suivante après un court délai
+                        setTimeout(playNextNote, 180);
+                    }
+                    
+                    // Démarrer la musique
+                    playNextNote();
+                    
+                    // Stocker la référence pour pouvoir l'arrêter
+                    backgroundMusic = {
+                        stop: function() {
+                            isPlaying = false;
+                        },
+                        pause: function() {
+                            isPlaying = false;
+                        }
+                    };
+                    
+                } catch(e) {
+                    // Silently fail
+                }
+            }
+
+            function stopBackgroundMusic() {
+                if (backgroundMusic) {
+                    backgroundMusic.stop();
+                    backgroundMusic = null;
+                }
             }
 
             // ======================== FONCTIONS ========================
@@ -904,6 +1006,7 @@
                 timeLeft = data.timerDuration || 180;
                 updateTimerDisplay();
                 playSound('start');
+                playBackgroundMusic();
                 
                 timerInterval = setInterval(() => {
                     timeLeft--;
@@ -916,9 +1019,12 @@
                     if (timeLeft <= 0) {
                         clearInterval(timerInterval);
                         isTimerRunning = false;
+                        isTimeEnded = true;
                         playSound('end');
+                        stopBackgroundMusic();
                         document.getElementById('timerDisplay').classList.add('warning');
-                        showManualScore();
+                        // Afficher le message overlay
+                        document.getElementById('timerEndedOverlay').classList.add('active');
                     }
                 }, 1000);
             }
@@ -926,6 +1032,7 @@
             function stopTimer() {
                 clearInterval(timerInterval);
                 isTimerRunning = false;
+                stopBackgroundMusic();
             }
 
             function updateTimerDisplay() {
@@ -947,47 +1054,13 @@
                 document.getElementById('timerDisplay').classList.remove('warning');
                 isTimerRunning = false;
                 isTimeEnded = false;
+                document.getElementById('timerEndedOverlay').classList.remove('active');
             }
 
-            // ======================== MANUAL SCORE ========================
-            function showManualScore() {
-                stopTimer();
-                isTimeEnded = true;
-                
-                const teamScores = [0, 0, 0, 0, 0];
-                for (let q = 0; q < 5; q++) {
-                    for (let t = 0; t < 5; t++) {
-                        const key = `${q}-${t}`;
-                        if (currentAnswers[key]) {
-                            teamScores[t]++;
-                        }
-                    }
-                }
-                manualScores = [...teamScores];
-                
-                let html = '';
-                for (let i = 0; i < 5; i++) {
-                    html += `<div class="manual-score-row">
-                        <label>${getTeamName(i)}</label>
-                        <input type="number" min="0" max="5" value="${manualScores[i]}" class="manual-score-input" data-team="${i}">
-                        <span class="score-display">/ 5</span>
-                    </div>`;
-                }
-                document.getElementById('manual-score-container').innerHTML = html;
-                
-                document.querySelectorAll('.manual-score-input').forEach(inp => {
-                    inp.addEventListener('input', function() {
-                        const team = parseInt(this.dataset.team);
-                        let val = parseInt(this.value) || 0;
-                        if (val < 0) val = 0;
-                        if (val > 5) val = 5;
-                        manualScores[team] = val;
-                        this.value = val;
-                    });
-                });
-                
-                showPage('page-manual-score');
-            }
+            // Fermer l'overlay
+            window.closeTimerEnded = function() {
+                document.getElementById('timerEndedOverlay').classList.remove('active');
+            };
 
             // ======================== RENDU ========================
             function renderTeamsInput() {
@@ -1062,8 +1135,8 @@
                 document.getElementById('domain-title').textContent = `📖 المجال: ${names[domainIdx]}`;
                 
                 currentAnswers = {};
-                manualScores = [0, 0, 0, 0, 0];
                 isTimeEnded = false;
+                document.getElementById('timerEndedOverlay').classList.remove('active');
                 
                 let html = '';
                 qs.forEach((q, idx) => {
@@ -1086,14 +1159,6 @@
             }
 
             window.toggleAnswer = function(questionIdx, teamIdx) {
-                if (isTimeEnded) {
-                    alert('⚠️ انتهى الوقت! لا يمكنك تغيير الإجابات.');
-                    return;
-                }
-                if (!isTimerRunning && timeLeft > 0) {
-                    startTimer();
-                }
-                
                 const key = `${questionIdx}-${teamIdx}`;
                 const btn = document.querySelector(`.answer-btn[data-question="${questionIdx}"][data-team="${teamIdx}"]`);
                 
@@ -1106,6 +1171,36 @@
                     }
                 }
             };
+
+            function submitAnswers() {
+                if (domainBeingPlayed === null) return;
+                stopTimer();
+                stopBackgroundMusic();
+                
+                // Calculer les scores
+                const teamScores = [0, 0, 0, 0, 0];
+                for (let q = 0; q < 5; q++) {
+                    for (let t = 0; t < 5; t++) {
+                        const key = `${q}-${t}`;
+                        if (currentAnswers[key]) {
+                            teamScores[t]++;
+                        }
+                    }
+                }
+                
+                // Sauvegarder les scores
+                if (!data.scores[domainBeingPlayed]) data.scores[domainBeingPlayed] = [0,0,0,0,0];
+                teamScores.forEach((s, idx) => {
+                    data.scores[domainBeingPlayed][idx] = Math.min(5, Math.max(0, s));
+                });
+                if (!data.playedDomains.includes(domainBeingPlayed)) {
+                    data.playedDomains.push(domainBeingPlayed);
+                }
+                data.history.push({ domain: domainBeingPlayed, scores: [...teamScores], timestamp: new Date().toLocaleString() });
+                saveData();
+                
+                showRanking(domainBeingPlayed);
+            }
 
             function showRanking(domainIdx) {
                 const scores = data.scores[domainIdx] || [0,0,0,0,0];
@@ -1379,12 +1474,7 @@
 
                 document.getElementById('btn-back-domains-from-q').addEventListener('click', function(){
                     stopTimer();
-                    showPage('page-domains');
-                    renderDomains();
-                });
-
-                document.getElementById('btn-back-domains-from-manual').addEventListener('click', function(){
-                    stopTimer();
+                    stopBackgroundMusic();
                     showPage('page-domains');
                     renderDomains();
                 });
@@ -1394,40 +1484,8 @@
                     renderDomains();
                 });
 
-                document.getElementById('btn-time-end').addEventListener('click', function(){
-                    if (isTimerRunning || timeLeft > 0) {
-                        if (!confirm('⚠️ هل أنت متأكد من إنهاء الوقت؟ سيتم فتح صفحة إدخال النقاط يدوياً.')) {
-                            return;
-                        }
-                    }
-                    stopTimer();
-                    showManualScore();
-                });
-
-                document.getElementById('btn-confirm-manual-score').addEventListener('click', function(){
-                    if (domainBeingPlayed === null) return;
-                    
-                    const inputs = document.querySelectorAll('.manual-score-input');
-                    const scores = [];
-                    inputs.forEach(inp => {
-                        let val = parseInt(inp.value) || 0;
-                        if (val < 0) val = 0;
-                        if (val > 5) val = 5;
-                        scores.push(val);
-                    });
-                    manualScores = scores;
-                    
-                    if (!data.scores[domainBeingPlayed]) data.scores[domainBeingPlayed] = [0,0,0,0,0];
-                    manualScores.forEach((s, idx) => {
-                        data.scores[domainBeingPlayed][idx] = Math.min(5, Math.max(0, s));
-                    });
-                    if (!data.playedDomains.includes(domainBeingPlayed)) {
-                        data.playedDomains.push(domainBeingPlayed);
-                    }
-                    data.history.push({ domain: domainBeingPlayed, scores: [...manualScores], timestamp: new Date().toLocaleString() });
-                    saveData();
-                    
-                    showRanking(domainBeingPlayed);
+                document.getElementById('btn-submit-answers').addEventListener('click', function(){
+                    submitAnswers();
                 });
 
                 document.getElementById('btn-finish-round').addEventListener('click', function(){
