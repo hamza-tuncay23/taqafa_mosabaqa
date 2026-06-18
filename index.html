@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>المسابقة الثقافية</title>
     <style>
-        /* ===== CSS Variables للوضع الفاتح والداكن ===== */
+        /* ===== CSS Variables ===== */
         :root {
             --bg-primary: #f0f4f8;
             --bg-secondary: #ffffff;
@@ -39,10 +39,14 @@
             --admin-bg: #f8fafc;
             --admin-border: #d3dfe9;
             --tie-question-border: #b8861e;
+            --correct-answer: #2a7a4b;
+            --wrong-answer: #b13e3e;
+            --timer-bg: #1e2a3a;
+            --timer-text: #ffffff;
+            --timer-warning: #e74c3c;
             --transition-speed: 0.3s;
         }
 
-        /* ===== الوضع الداكن ===== */
         [data-theme="dark"] {
             --bg-primary: #0d1b2a;
             --bg-secondary: #1b2d45;
@@ -76,6 +80,8 @@
             --admin-bg: #1a3048;
             --admin-border: #3a5670;
             --tie-question-border: #c8962e;
+            --timer-bg: #0d1b2a;
+            --timer-text: #e8edf3;
         }
 
         /* ===== Styles Généraux ===== */
@@ -108,7 +114,7 @@
             position: relative;
         }
 
-        /* ===== Bouton Mode Sombre ===== */
+        /* ===== Theme Toggle ===== */
         .theme-toggle {
             position: fixed;
             top: 20px;
@@ -131,11 +137,7 @@
             transform: scale(1.05);
             box-shadow: 0 6px 20px var(--shadow-hover);
         }
-        .theme-toggle .icon {
-            font-size: 1.4rem;
-        }
 
-        /* ===== Bouton Admin dans la page d'accueil ===== */
         .admin-top-btn {
             position: absolute;
             top: 20px;
@@ -159,12 +161,91 @@
             transform: scale(1.03);
         }
 
-        /* ===== Autres Styles ===== */
-        h1, h2, h3 {
+        /* ===== Timer ===== */
+        .timer-container {
+            background: var(--timer-bg);
+            color: var(--timer-text);
+            padding: 15px 30px;
+            border-radius: 60px;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 2rem;
             font-weight: 700;
-            color: var(--text-primary);
+            margin: 15px auto;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            direction: ltr;
+        }
+        .timer-container .timer-icon {
+            font-size: 2rem;
+        }
+        .timer-container .time {
+            min-width: 80px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+        .timer-container .time.warning {
+            color: var(--timer-warning);
+            animation: pulse 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes pulse {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0.6; transform: scale(0.95); }
         }
 
+        /* ===== Question Answer Buttons ===== */
+        .question-answer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--question-bg);
+            padding: 15px 20px;
+            margin: 12px 0;
+            border-radius: 20px;
+            border-right: 6px solid var(--border-color);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .question-answer-row .q-text {
+            flex: 1;
+            font-size: 1.3rem;
+            font-weight: 500;
+            min-width: 150px;
+        }
+        .question-answer-row .answer-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid var(--border-color);
+            background: var(--bg-card);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+        }
+        .question-answer-row .answer-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--btn-primary);
+        }
+        .question-answer-row .answer-btn.correct {
+            background: var(--correct-answer);
+            border-color: var(--correct-answer);
+            color: white;
+            box-shadow: 0 0 20px rgba(42, 122, 75, 0.4);
+        }
+        .question-answer-row .answer-btn.correct::after {
+            content: "✓";
+        }
+        .question-answer-row .answer-btn:not(.correct)::after {
+            content: "✗";
+            color: var(--text-muted);
+        }
+
+        /* ===== Autres Styles ===== */
         .btn {
             background: var(--btn-primary);
             color: white;
@@ -230,11 +311,6 @@
             outline: none;
             border-color: var(--btn-primary);
             box-shadow: 0 0 0 3px rgba(30, 126, 131, 0.2);
-        }
-        textarea {
-            border-radius: 20px;
-            min-height: 100px;
-            resize: vertical;
         }
 
         .flex-row {
@@ -349,34 +425,6 @@
         }
         .hidden { display: none; }
 
-        /* ===== Questions ===== */
-        .question-item {
-            font-size: 1.8rem;
-            text-align: center;
-            padding: 20px 10px;
-            margin: 15px 0;
-            background: var(--question-bg);
-            border-radius: 20px;
-            border-right: 6px solid var(--question-border);
-            list-style: none;
-            box-shadow: 0 4px 12px var(--shadow-color);
-        }
-        #questions-list {
-            padding: 0;
-        }
-        #questions-list li {
-            font-size: 1.8rem;
-            text-align: center;
-            padding: 20px 10px;
-            margin: 15px 0;
-            background: var(--question-bg);
-            border-radius: 20px;
-            border-right: 6px solid var(--question-border);
-            list-style: none;
-            box-shadow: 0 4px 12px var(--shadow-color);
-        }
-
-        /* ===== Contact Info ===== */
         .contact-info {
             background: var(--contact-bg);
             border-radius: 20px;
@@ -393,7 +441,6 @@
             color: var(--btn-primary);
         }
 
-        /* ===== Questions List Admin ===== */
         .question-list-item {
             display: flex;
             gap: 10px;
@@ -413,31 +460,30 @@
             font-size: 0.9rem;
         }
 
-        /* ===== Responsive ===== */
-        @media (max-width: 700px) {
-            .container { padding: 20px 12px; }
-            .question-item, #questions-list li {
-                font-size: 1.3rem;
-                padding: 15px 8px;
-            }
-            .theme-toggle {
-                top: 10px;
-                left: 10px;
-                padding: 6px 12px;
-                font-size: 0.9rem;
-            }
-            .admin-top-btn {
-                top: 10px;
-                left: 10px;
-                padding: 6px 14px;
-                font-size: 0.8rem;
-            }
-            .domain-card .icon {
-                font-size: 2.2rem;
-            }
+        /* ===== Score Summary ===== */
+        .score-summary {
+            background: var(--bg-input);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid var(--border-color);
+            text-align: center;
+        }
+        .score-summary .total-score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--btn-success);
         }
 
-        /* ===== Scrollbar personnalisée ===== */
+        @media (max-width: 700px) {
+            .container { padding: 20px 12px; }
+            .question-answer-row .q-text { font-size: 1rem; }
+            .question-answer-row .answer-btn { width: 50px; height: 50px; font-size: 1.2rem; }
+            .timer-container { font-size: 1.5rem; padding: 10px 20px; }
+            .theme-toggle { top: 10px; left: 10px; padding: 6px 12px; font-size: 0.9rem; }
+            .admin-top-btn { top: 10px; left: 10px; padding: 6px 14px; font-size: 0.8rem; }
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -456,41 +502,37 @@
 </head>
 <body>
 
-    <!-- ===== Bouton Mode Sombre ===== -->
-    <button class="theme-toggle" id="themeToggle" title="تبديل الوضع">
-        <span class="icon" id="themeIcon">🌙</span>
+    <!-- ===== Theme Toggle ===== -->
+    <button class="theme-toggle" id="themeToggle">
+        <span id="themeIcon">🌙</span>
         <span id="themeLabel">ليلي</span>
     </button>
 
     <div class="container" id="app">
-        <!-- ===== الصفحة الرئيسية ===== -->
+        <!-- ===== PAGE HOME ===== -->
         <div id="page-home" class="page active">
-            <!-- Bouton Admin dans la page d'accueil -->
             <button class="admin-top-btn" id="btn-admin-top">🔐 الإدارة</button>
-
             <div class="center" style="padding-top: 20px;">
                 <h1 style="font-size: 2.8rem;">🏆 المسابقة الثقافية</h1>
                 <p style="font-size: 1.3rem; margin: 25px 0; color: var(--text-secondary);">
                     مرحباً بكم في أكبر مسابقة ثقافية متكاملة!<br>
-                    سجل 5 فرق، كل فريق مكون من 5 أعضاء، وتنافس في 6 مجالات.
+                    سجل 5 فرق، كل فريق مكون من 5 أعضاء، وتنافس في 8 مجالات.
                 </p>
                 <div style="background: var(--contact-bg); border-radius: 40px; padding: 18px; max-width: 550px; margin: 0 auto 30px; border: 1px solid var(--border-color);">
                     <p style="font-weight: 500;">📌 سيتم عرض النتائج مباشرة، وتحديث الترتيب تلقائياً بعد كل جولة.</p>
                 </div>
-
                 <div class="contact-info">
                     <p>📞 <strong>للتواصل:</strong> +212 631909130</p>
                     <p>📱 <strong>Instagram:</strong> ctrlaltstudy</p>
                     <p style="font-size: 0.95rem; color: var(--text-muted);">للمزيد من المعلومات، يرجى الاتصال بـ BDE</p>
                 </div>
-
                 <button class="btn btn-success" id="btn-start" style="font-size: 1.6rem; padding: 18px 50px; margin-top: 30px;">
                     🚀 ابدأ المسابقة
                 </button>
             </div>
         </div>
 
-        <!-- ===== صفحة تسجيل الفرق ===== -->
+        <!-- ===== PAGE TEAMS ===== -->
         <div id="page-teams" class="page">
             <h2>📋 تسجيل الفرق المشاركة</h2>
             <p style="color: var(--text-muted);">أدخل أسماء 5 فرق، كل فريق يضم 5 أعضاء (اختياري)</p>
@@ -502,7 +544,7 @@
             <div id="team-error" class="alert hidden"></div>
         </div>
 
-        <!-- ===== صفحة المجالات ===== -->
+        <!-- ===== PAGE DOMAINS ===== -->
         <div id="page-domains" class="page">
             <div class="flex-between">
                 <h2>🎯 اختر المجال</h2>
@@ -518,28 +560,37 @@
             <div id="score-table-wrapper"></div>
         </div>
 
-        <!-- ===== صفحة الأسئلة ===== -->
+        <!-- ===== PAGE QUESTIONS (avec timer et boutons de réponse) ===== -->
         <div id="page-questions" class="page">
             <h2 id="domain-title" style="text-align: center;">📖 المجال: </h2>
-            <div id="questions-list"></div>
+            
+            <!-- Timer -->
             <div class="center">
-                <button class="btn" id="btn-next-score">➡️ التالي</button>
+                <div class="timer-container" id="timerContainer">
+                    <span class="timer-icon">⏱️</span>
+                    <span class="time" id="timerDisplay">03:00</span>
+                </div>
+            </div>
+            
+            <div id="questions-list"></div>
+            
+            <div class="center" style="margin-top: 20px;">
+                <button class="btn" id="btn-submit-answers">✅ تأكيد الإجابات</button>
                 <button class="btn btn-secondary" id="btn-back-domains-from-q">🔙 رجوع</button>
             </div>
         </div>
 
-        <!-- ===== صفحة إدخال النقاط ===== -->
+        <!-- ===== PAGE SCORE (résumé des points) ===== -->
         <div id="page-score" class="page">
-            <h2>✏️ إدخال النقاط</h2>
-            <p style="color: var(--text-muted);">أدخل عدد النقاط من 5 لكل فريق في هذه الجولة</p>
-            <div id="score-inputs"></div>
-            <div class="center">
-                <button class="btn btn-success" id="btn-submit-score">✅ تأكيد النقاط</button>
+            <h2>📊 ملخص النقاط</h2>
+            <div id="score-summary-container"></div>
+            <div class="center" style="margin-top: 20px;">
+                <button class="btn" id="btn-next-round">➡️ التالي</button>
                 <button class="btn btn-secondary" id="btn-back-domains-from-score">🔙 رجوع</button>
             </div>
         </div>
 
-        <!-- ===== صفحة الترتيب ===== -->
+        <!-- ===== PAGE RANKING ===== -->
         <div id="page-ranking" class="page">
             <h2>🏅 ترتيب الجولة الحالية</h2>
             <div id="ranking-table"></div>
@@ -548,7 +599,7 @@
             </div>
         </div>
 
-        <!-- ===== صفحة الفائز ===== -->
+        <!-- ===== PAGE WINNER ===== -->
         <div id="page-winner" class="page">
             <div class="center" style="padding: 40px 0;">
                 <h1 style="font-size: 3.5rem; color: var(--btn-success);">🎉 مبروك <span id="winner-name"></span> الفوز بالمسابقة الثقافية 🎉</h1>
@@ -556,7 +607,7 @@
             </div>
         </div>
 
-        <!-- ===== صفحة الاحتياط ===== -->
+        <!-- ===== PAGE TIEBREAKER ===== -->
         <div id="page-tiebreaker" class="page">
             <h2>⚖️ جولة الاحتياط</h2>
             <p id="tie-info" style="color: var(--text-muted);">تم التعادل بين بعض الفرق، سيتم طرح 3 أسئلة عشوائية لتحديد الفائز.</p>
@@ -568,7 +619,7 @@
             </div>
         </div>
 
-        <!-- ===== لوحة الإدارة ===== -->
+        <!-- ===== PAGE ADMIN ===== -->
         <div id="page-admin" class="page admin-panel">
             <h2>🔐 لوحة الإدارة</h2>
             <p>أدخل كلمة المرور:</p>
@@ -602,14 +653,7 @@
             const DEFAULT_DATA = {
                 teams: ['', '', '', '', ''],
                 members: [[], [], [], [], []],
-                scores: {
-                    0: [0,0,0,0,0],
-                    1: [0,0,0,0,0],
-                    2: [0,0,0,0,0],
-                    3: [0,0,0,0,0],
-                    4: [0,0,0,0,0],
-                    5: [0,0,0,0,0]
-                },
+                scores: {},
                 playedDomains: [],
                 currentDomain: null,
                 history: [],
@@ -621,12 +665,7 @@
                     'كم عدد ألوان قوس قزح؟',
                     'ما هو الكوكب الأقرب للشمس؟',
                     'من هو مؤسس الدولة العثمانية؟',
-                    'ما هي أكبر قارة في العالم؟',
-                    'متى كانت معركة حطين؟',
-                    'ما هي عاصمة اليابان؟',
-                    'من هو مخترع الهاتف؟',
-                    'ما هي أسرع رياضة في العالم؟',
-                    'كم عدد أيام السنة الهجرية؟'
+                    'ما هي أكبر قارة في العالم؟'
                 ],
                 questions: {
                     0: ['سؤال ديني 1', 'سؤال ديني 2', 'سؤال ديني 3', 'سؤال ديني 4', 'سؤال ديني 5'],
@@ -634,44 +673,73 @@
                     2: ['سؤال تاريخي 1', 'سؤال تاريخي 2', 'سؤال تاريخي 3', 'سؤال تاريخي 4', 'سؤال تاريخي 5'],
                     3: ['سؤال جغرافي 1', 'سؤال جغرافي 2', 'سؤال جغرافي 3', 'سؤال جغرافي 4', 'سؤال جغرافي 5'],
                     4: ['سؤال علمي 1', 'سؤال علمي 2', 'سؤال علمي 3', 'سؤال علمي 4', 'سؤال علمي 5'],
-                    5: ['سؤال رياضي 1', 'سؤال رياضي 2', 'سؤال رياضي 3', 'سؤال رياضي 4', 'سؤال رياضي 5']
+                    5: ['سؤال رياضي 1', 'سؤال رياضي 2', 'سؤال رياضي 3', 'سؤال رياضي 4', 'سؤال رياضي 5'],
+                    6: ['سؤال آداب 1', 'سؤال آداب 2', 'سؤال آداب 3', 'سؤال آداب 4', 'سؤال آداب 5'],
+                    7: ['سؤال تكنولوجيا 1', 'سؤال تكنولوجيا 2', 'سؤال تكنولوجيا 3', 'سؤال تكنولوجيا 4', 'سؤال تكنولوجيا 5']
                 },
-                adminPassword: 'admin123'
+                adminPassword: 'admin123',
+                timerDuration: 180 // 3 minutes en secondes
             };
 
             let data = loadData();
             let domainBeingPlayed = null;
+            let timerInterval = null;
+            let timeLeft = 180;
+            let isTimerRunning = false;
+            let currentAnswers = {};
+            let scoreForCurrentDomain = [0, 0, 0, 0, 0];
 
-            // ======================== MODE SOMBRE ========================
-            function initTheme() {
-                const savedTheme = localStorage.getItem('theme') || 'light';
-                document.documentElement.setAttribute('data-theme', savedTheme);
-                updateThemeButton(savedTheme);
-            }
-
-            function toggleTheme() {
-                const current = document.documentElement.getAttribute('data-theme');
-                const newTheme = current === 'dark' ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateThemeButton(newTheme);
-            }
-
-            function updateThemeButton(theme) {
-                const icon = document.getElementById('themeIcon');
-                const label = document.getElementById('themeLabel');
-                if (theme === 'dark') {
-                    icon.textContent = '☀️';
-                    label.textContent = 'نهاري';
-                } else {
-                    icon.textContent = '🌙';
-                    label.textContent = 'ليلي';
+            // ======================== AUDIO ========================
+            function playSound(type) {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    if (type === 'start') {
+                        oscillator.frequency.value = 440;
+                        oscillator.type = 'sine';
+                        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+                        oscillator.start(ctx.currentTime);
+                        oscillator.stop(ctx.currentTime + 0.3);
+                    } else if (type === 'tick') {
+                        oscillator.frequency.value = 800;
+                        oscillator.type = 'sine';
+                        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+                        oscillator.start(ctx.currentTime);
+                        oscillator.stop(ctx.currentTime + 0.1);
+                    } else if (type === 'end') {
+                        oscillator.frequency.value = 300;
+                        oscillator.type = 'square';
+                        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+                        oscillator.start(ctx.currentTime);
+                        oscillator.stop(ctx.currentTime + 0.8);
+                    } else if (type === 'correct') {
+                        oscillator.frequency.value = 523;
+                        oscillator.type = 'sine';
+                        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+                        oscillator.start(ctx.currentTime);
+                        oscillator.stop(ctx.currentTime + 0.2);
+                        setTimeout(() => {
+                            const osc2 = ctx.createOscillator();
+                            const gain2 = ctx.createGain();
+                            osc2.connect(gain2);
+                            gain2.connect(ctx.destination);
+                            osc2.frequency.value = 659;
+                            osc2.type = 'sine';
+                            gain2.gain.setValueAtTime(0.2, ctx.currentTime);
+                            osc2.start(ctx.currentTime);
+                            osc2.stop(ctx.currentTime + 0.2);
+                        }, 200);
+                    }
+                } catch(e) {
+                    // Silently fail if audio not supported
                 }
             }
 
-            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
-            // ======================== FONCTIONS DE BASE ========================
+            // ======================== FONCTIONS ========================
             function loadData() {
                 try {
                     const raw = localStorage.getItem(STORAGE_KEY);
@@ -679,6 +747,10 @@
                         const parsed = JSON.parse(raw);
                         for (let key in DEFAULT_DATA) {
                             if (!(key in parsed)) parsed[key] = DEFAULT_DATA[key];
+                        }
+                        // S'assurer que les scores pour les nouveaux domaines existent
+                        for (let d = 0; d < 8; d++) {
+                            if (!parsed.scores[d]) parsed.scores[d] = [0,0,0,0,0];
                         }
                         return parsed;
                     }
@@ -694,13 +766,13 @@
             
             function getTotalScore(teamIdx) {
                 let total = 0;
-                for (let d=0; d<6; d++) {
+                for (let d=0; d<8; d++) {
                     if (data.scores[d] && data.scores[d][teamIdx] !== undefined) {
                         total += data.scores[d][teamIdx];
                     }
                 }
-                if (data.scores[6] && data.scores[6][teamIdx] !== undefined) {
-                    total += data.scores[6][teamIdx];
+                if (data.scores[8] && data.scores[8][teamIdx] !== undefined) {
+                    total += data.scores[8][teamIdx];
                 }
                 return total;
             }
@@ -710,7 +782,7 @@
             }
 
             function allDomainsPlayed() {
-                return data.playedDomains.length === 6;
+                return data.playedDomains.length === 8;
             }
 
             function getRankedTeams() {
@@ -752,6 +824,58 @@
                 window.scrollTo(0,0);
             }
 
+            // ======================== TIMER ========================
+            function startTimer() {
+                if (isTimerRunning) return;
+                isTimerRunning = true;
+                timeLeft = data.timerDuration || 180;
+                updateTimerDisplay();
+                playSound('start');
+                
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    
+                    if (timeLeft <= 10 && timeLeft > 0) {
+                        playSound('tick');
+                    }
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        playSound('end');
+                        document.getElementById('timerDisplay').classList.add('warning');
+                        alert('⏰ انتهى الوقت! سيتم احتساب الإجابات الحالية.');
+                        submitAnswers();
+                    }
+                }, 1000);
+            }
+
+            function stopTimer() {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+            }
+
+            function updateTimerDisplay() {
+                const mins = Math.floor(timeLeft / 60);
+                const secs = timeLeft % 60;
+                const display = document.getElementById('timerDisplay');
+                display.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                if (timeLeft <= 10) {
+                    display.classList.add('warning');
+                } else {
+                    display.classList.remove('warning');
+                }
+            }
+
+            function resetTimer() {
+                stopTimer();
+                timeLeft = data.timerDuration || 180;
+                updateTimerDisplay();
+                document.getElementById('timerDisplay').classList.remove('warning');
+                isTimerRunning = false;
+            }
+
             // ======================== RENDU ========================
             function renderTeamsInput() {
                 const container = document.getElementById('teams-container');
@@ -788,10 +912,10 @@
 
             function renderDomains() {
                 const grid = document.getElementById('domain-grid');
-                const domainNames = ['المجال الديني', 'المجال الثقافي', 'المجال التاريخي', 'المجال الجغرافي', 'المجال العلمي', 'المجال الرياضي'];
-                const domainIcons = ['🕌', '🎭', '📜', '🌍', '🔬', '⚽'];
+                const domainNames = ['المجال الديني', 'المجال الثقافي', 'المجال التاريخي', 'المجال الجغرافي', 'المجال العلمي', 'المجال الرياضي', 'المجال الآداب', 'المجال التكنولوجيا'];
+                const domainIcons = ['🕌', '🎭', '📜', '🌍', '🔬', '⚽', '📖', '💻'];
                 let html = '';
-                for (let i=0; i<6; i++) {
+                for (let i=0; i<8; i++) {
                     const played = isDomainPlayed(i);
                     html += `<div class="domain-card ${played?'disabled':''}" data-domain="${i}">
                         <span class="icon">${domainIcons[i]}</span>
@@ -812,38 +936,106 @@
                             return;
                         }
                         domainBeingPlayed = idx;
-                        showQuestions(idx);
+                        showQuestionsWithButtons(idx);
                     });
                 });
                 renderScoreTable();
                 checkWinner();
             }
 
-            function showQuestions(domainIdx) {
+            function showQuestionsWithButtons(domainIdx) {
                 const qs = data.questions[domainIdx] || ['سؤال 1','سؤال 2','سؤال 3','سؤال 4','سؤال 5'];
-                const names = ['المجال الديني', 'المجال الثقافي', 'المجال التاريخي', 'المجال الجغرافي', 'المجال العلمي', 'المجال الرياضي'];
+                const names = ['المجال الديني', 'المجال الثقافي', 'المجال التاريخي', 'المجال الجغرافي', 'المجال العلمي', 'المجال الرياضي', 'المجال الآداب', 'المجال التكنولوجيا'];
                 document.getElementById('domain-title').textContent = `📖 المجال: ${names[domainIdx]}`;
-                let html = '<ol style="padding:0;">';
+                
+                currentAnswers = {};
+                scoreForCurrentDomain = [0, 0, 0, 0, 0];
+                
+                let html = '';
                 qs.forEach((q, idx) => {
-                    html += `<li class="question-item">${q}</li>`;
+                    html += `<div class="question-answer-row">
+                        <span class="q-text">${idx+1}. ${q}</span>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            ${[0,1,2,3,4].map(teamIdx => `
+                                <button class="answer-btn" data-question="${idx}" data-team="${teamIdx}" onclick="toggleAnswer(${idx}, ${teamIdx})">
+                                    <span style="font-size:0.7rem; display:block;">${getTeamName(teamIdx).substring(0,3)}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>`;
                 });
-                html += '</ol>';
                 document.getElementById('questions-list').innerHTML = html;
+                
+                // Réinitialiser le timer
+                resetTimer();
                 showPage('page-questions');
+                
+                // Démarrer le timer après un court délai
+                setTimeout(() => startTimer(), 500);
             }
 
-            function showScoreInput(domainIdx) {
-                const container = document.getElementById('score-inputs');
-                let html = '';
-                for (let i=0; i<5; i++) {
-                    html += `<div style="display:flex; align-items:center; gap:12px; margin:8px 0; background:var(--bg-input); padding:10px 16px; border-radius:15px; border:1px solid var(--border-color);">
-                        <strong style="width:120px;">${getTeamName(i)}</strong>
-                        <input type="number" min="0" max="5" value="0" class="score-per-team" data-team="${i}" style="width:80px;">
-                        <span>/ 5</span>
-                    </div>`;
+            // Fonction globale pour toggle les réponses
+            window.toggleAnswer = function(questionIdx, teamIdx) {
+                if (!isTimerRunning && timeLeft > 0) {
+                    // Si le timer n'est pas encore démarré, on le démarre
+                    startTimer();
                 }
-                container.innerHTML = html;
+                
+                const key = `${questionIdx}-${teamIdx}`;
+                const btn = document.querySelector(`.answer-btn[data-question="${questionIdx}"][data-team="${teamIdx}"]`);
+                
+                if (btn) {
+                    btn.classList.toggle('correct');
+                    currentAnswers[key] = btn.classList.contains('correct');
+                    
+                    if (currentAnswers[key]) {
+                        playSound('correct');
+                    }
+                }
+            };
+
+            function submitAnswers() {
+                stopTimer();
+                
+                // Compter les points pour chaque équipe
+                const teamScores = [0, 0, 0, 0, 0];
+                for (let q = 0; q < 5; q++) {
+                    for (let t = 0; t < 5; t++) {
+                        const key = `${q}-${t}`;
+                        if (currentAnswers[key]) {
+                            teamScores[t]++;
+                        }
+                    }
+                }
+                
+                scoreForCurrentDomain = teamScores;
+                
+                // Afficher le résumé
+                let html = `<div class="score-summary">
+                    <h3>📊 نتائج المجال</h3>
+                    <table>
+                        <thead><tr><th>الفريق</th><th>الإجابات الصحيحة</th><th>/5</th></tr></thead>
+                        <tbody>`;
+                teamScores.forEach((score, idx) => {
+                    html += `<tr>
+                        <td><strong>${getTeamName(idx)}</strong></td>
+                        <td style="font-size:1.5rem; font-weight:700; color:var(--btn-success);">${score}</td>
+                        <td>/ 5</td>
+                    </tr>`;
+                });
+                html += `</tbody></table>
+                    <div style="margin-top:15px; font-size:0.9rem; color:var(--text-muted);">
+                        ⏱️ الوقت المستغرق: ${formatTime(data.timerDuration - timeLeft)}
+                    </div>
+                </div>`;
+                document.getElementById('score-summary-container').innerHTML = html;
                 showPage('page-score');
+            }
+
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
             }
 
             function showRanking(domainIdx) {
@@ -864,20 +1056,20 @@
                 const wrapper = document.getElementById('score-table-wrapper');
                 let html = `<table>
                     <thead><tr><th>الفريق</th>`;
-                const domainLabels = ['ديني','ثقافي','تاريخي','جغرافي','علمي','رياضي'];
-                for (let d=0; d<6; d++) {
+                const domainLabels = ['ديني','ثقافي','تاريخي','جغرافي','علمي','رياضي','آداب','تكنولوجيا'];
+                for (let d=0; d<8; d++) {
                     html += `<th>${domainLabels[d]}</th>`;
                 }
                 html += `<th>الاحتياط</th><th>المجموع</th></tr></thead><tbody>`;
                 for (let t=0; t<5; t++) {
                     html += `<tr><td><strong>${getTeamName(t)}</strong></td>`;
                     let total = 0;
-                    for (let d=0; d<6; d++) {
+                    for (let d=0; d<8; d++) {
                         const val = (data.scores[d] && data.scores[d][t] !== undefined) ? data.scores[d][t] : 0;
                         html += `<td>${val}</td>`;
                         total += val;
                     }
-                    const tieVal = (data.scores[6] && data.scores[6][t] !== undefined) ? data.scores[6][t] : 0;
+                    const tieVal = (data.scores[8] && data.scores[8][t] !== undefined) ? data.scores[8][t] : 0;
                     html += `<td>${tieVal}</td>`;
                     total += tieVal;
                     html += `<td><strong>${total}</strong></td></tr>`;
@@ -972,9 +1164,9 @@
 
             function loadAdminContent() {
                 const container = document.getElementById('admin-domains-list');
-                const domainNames = ['ديني','ثقافي','تاريخي','جغرافي','علمي','رياضي'];
+                const domainNames = ['ديني','ثقافي','تاريخي','جغرافي','علمي','رياضي','آداب','تكنولوجيا'];
                 let html = '';
-                for (let d=0; d<6; d++) {
+                for (let d=0; d<8; d++) {
                     html += `<div style="border-bottom:1px solid var(--border-color); padding:12px 0;">
                         <h4>📚 ${domainNames[d]}</h4>
                         <div style="display:flex; flex-wrap:wrap; gap:8px;">
@@ -1009,7 +1201,32 @@
 
             // ======================== INIT ========================
             function init() {
-                initTheme();
+                // Theme
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                const icon = document.getElementById('themeIcon');
+                const label = document.getElementById('themeLabel');
+                if (savedTheme === 'dark') {
+                    icon.textContent = '☀️';
+                    label.textContent = 'نهاري';
+                } else {
+                    icon.textContent = '🌙';
+                    label.textContent = 'ليلي';
+                }
+
+                document.getElementById('themeToggle').addEventListener('click', function(){
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const newTheme = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    if (newTheme === 'dark') {
+                        document.getElementById('themeIcon').textContent = '☀️';
+                        document.getElementById('themeLabel').textContent = 'نهاري';
+                    } else {
+                        document.getElementById('themeIcon').textContent = '🌙';
+                        document.getElementById('themeLabel').textContent = 'ليلي';
+                    }
+                });
 
                 const hasTeams = data.teams.some(t => t.trim() !== '');
                 if (hasTeams && allDomainsPlayed()) {
@@ -1063,6 +1280,7 @@
                 });
 
                 document.getElementById('btn-back-domains-from-q').addEventListener('click', function(){
+                    stopTimer();
                     showPage('page-domains');
                     renderDomains();
                 });
@@ -1077,27 +1295,24 @@
                     renderDomains();
                 });
 
-                document.getElementById('btn-next-score').addEventListener('click', function(){
-                    if (domainBeingPlayed === null) return;
-                    showScoreInput(domainBeingPlayed);
+                document.getElementById('btn-submit-answers').addEventListener('click', function(){
+                    submitAnswers();
                 });
 
-                document.getElementById('btn-submit-score').addEventListener('click', function(){
+                document.getElementById('btn-next-round').addEventListener('click', function(){
                     if (domainBeingPlayed === null) return;
-                    const inputs = document.querySelectorAll('.score-per-team');
-                    const scores = [];
-                    inputs.forEach(inp => {
-                        scores.push(parseInt(inp.value) || 0);
-                    });
+                    
+                    // Sauvegarder les scores
                     if (!data.scores[domainBeingPlayed]) data.scores[domainBeingPlayed] = [0,0,0,0,0];
-                    scores.forEach((s, idx) => {
+                    scoreForCurrentDomain.forEach((s, idx) => {
                         data.scores[domainBeingPlayed][idx] = Math.min(5, Math.max(0, s));
                     });
                     if (!data.playedDomains.includes(domainBeingPlayed)) {
                         data.playedDomains.push(domainBeingPlayed);
                     }
-                    data.history.push({ domain: domainBeingPlayed, scores: [...scores], timestamp: new Date().toLocaleString() });
+                    data.history.push({ domain: domainBeingPlayed, scores: [...scoreForCurrentDomain], timestamp: new Date().toLocaleString() });
                     saveData();
+                    
                     showRanking(domainBeingPlayed);
                 });
 
@@ -1140,9 +1355,9 @@
                         return;
                     }
                     
-                    if (!data.scores[6]) data.scores[6] = [0,0,0,0,0];
+                    if (!data.scores[8]) data.scores[8] = [0,0,0,0,0];
                     for (let team in scores) {
-                        data.scores[6][parseInt(team)] = (data.scores[6][parseInt(team)] || 0) + scores[team];
+                        data.scores[8][parseInt(team)] = (data.scores[8][parseInt(team)] || 0) + scores[team];
                     }
                     saveData();
                     
