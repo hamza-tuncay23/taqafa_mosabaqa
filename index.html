@@ -245,6 +245,38 @@
             color: var(--text-muted);
         }
 
+        /* ===== Score Input Manual ===== */
+        .manual-score-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-input);
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 15px;
+            border: 2px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .manual-score-row label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            min-width: 120px;
+        }
+        .manual-score-row input {
+            width: 80px;
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 30px;
+        }
+        .manual-score-row .score-display {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--btn-success);
+            min-width: 30px;
+        }
+
         /* ===== Autres Styles ===== */
         .btn {
             background: var(--btn-primary);
@@ -460,7 +492,6 @@
             font-size: 0.9rem;
         }
 
-        /* ===== Score Summary ===== */
         .score-summary {
             background: var(--bg-input);
             border-radius: 20px;
@@ -468,11 +499,6 @@
             margin: 15px 0;
             border: 2px solid var(--border-color);
             text-align: center;
-        }
-        .score-summary .total-score {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--btn-success);
         }
 
         @media (max-width: 700px) {
@@ -482,6 +508,8 @@
             .timer-container { font-size: 1.5rem; padding: 10px 20px; }
             .theme-toggle { top: 10px; left: 10px; padding: 6px 12px; font-size: 0.9rem; }
             .admin-top-btn { top: 10px; left: 10px; padding: 6px 14px; font-size: 0.8rem; }
+            .manual-score-row { flex-direction: column; align-items: stretch; text-align: center; }
+            .manual-score-row input { width: 100%; max-width: 120px; margin: 0 auto; }
         }
 
         ::-webkit-scrollbar {
@@ -526,9 +554,14 @@
                     <p>📱 <strong>Instagram:</strong> ctrlaltstudy</p>
                     <p style="font-size: 0.95rem; color: var(--text-muted);">للمزيد من المعلومات، يرجى الاتصال بـ BDE</p>
                 </div>
-                <button class="btn btn-success" id="btn-start" style="font-size: 1.6rem; padding: 18px 50px; margin-top: 30px;">
-                    🚀 ابدأ المسابقة
-                </button>
+                <div style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                    <button class="btn btn-success" id="btn-start" style="font-size: 1.6rem; padding: 18px 50px;">
+                        🚀 ابدأ المسابقة
+                    </button>
+                    <button class="btn btn-danger" id="btn-reset-scores" style="font-size: 1.2rem; padding: 14px 30px;">
+                        🔄 إعادة تعيين النقاط
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -575,18 +608,19 @@
             <div id="questions-list"></div>
             
             <div class="center" style="margin-top: 20px;">
-                <button class="btn" id="btn-submit-answers">✅ تأكيد الإجابات</button>
+                <button class="btn btn-warning" id="btn-time-end">⏰ انتهى الوقت</button>
                 <button class="btn btn-secondary" id="btn-back-domains-from-q">🔙 رجوع</button>
             </div>
         </div>
 
-        <!-- ===== PAGE SCORE (résumé des points) ===== -->
-        <div id="page-score" class="page">
-            <h2>📊 ملخص النقاط</h2>
-            <div id="score-summary-container"></div>
+        <!-- ===== PAGE MANUAL SCORE (après le temps écoulé) ===== -->
+        <div id="page-manual-score" class="page">
+            <h2>✏️ إدخال النقاط يدوياً</h2>
+            <p style="color: var(--text-muted);">أدخل عدد الإجابات الصحيحة لكل فريق (من 0 إلى 5)</p>
+            <div id="manual-score-container"></div>
             <div class="center" style="margin-top: 20px;">
-                <button class="btn" id="btn-next-round">➡️ التالي</button>
-                <button class="btn btn-secondary" id="btn-back-domains-from-score">🔙 رجوع</button>
+                <button class="btn btn-success" id="btn-confirm-manual-score">✅ تأكيد النقاط</button>
+                <button class="btn btn-secondary" id="btn-back-domains-from-manual">🔙 رجوع</button>
             </div>
         </div>
 
@@ -678,7 +712,7 @@
                     7: ['سؤال تكنولوجيا 1', 'سؤال تكنولوجيا 2', 'سؤال تكنولوجيا 3', 'سؤال تكنولوجيا 4', 'سؤال تكنولوجيا 5']
                 },
                 adminPassword: 'admin123',
-                timerDuration: 180 // 3 minutes en secondes
+                timerDuration: 180
             };
 
             let data = loadData();
@@ -687,7 +721,8 @@
             let timeLeft = 180;
             let isTimerRunning = false;
             let currentAnswers = {};
-            let scoreForCurrentDomain = [0, 0, 0, 0, 0];
+            let manualScores = [0, 0, 0, 0, 0];
+            let isTimeEnded = false;
 
             // ======================== AUDIO ========================
             function playSound(type) {
@@ -734,9 +769,7 @@
                             osc2.stop(ctx.currentTime + 0.2);
                         }, 200);
                     }
-                } catch(e) {
-                    // Silently fail if audio not supported
-                }
+                } catch(e) {}
             }
 
             // ======================== FONCTIONS ========================
@@ -748,7 +781,6 @@
                         for (let key in DEFAULT_DATA) {
                             if (!(key in parsed)) parsed[key] = DEFAULT_DATA[key];
                         }
-                        // S'assurer que les scores pour les nouveaux domaines existent
                         for (let d = 0; d < 8; d++) {
                             if (!parsed.scores[d]) parsed.scores[d] = [0,0,0,0,0];
                         }
@@ -828,6 +860,7 @@
             function startTimer() {
                 if (isTimerRunning) return;
                 isTimerRunning = true;
+                isTimeEnded = false;
                 timeLeft = data.timerDuration || 180;
                 updateTimerDisplay();
                 playSound('start');
@@ -845,8 +878,8 @@
                         isTimerRunning = false;
                         playSound('end');
                         document.getElementById('timerDisplay').classList.add('warning');
-                        alert('⏰ انتهى الوقت! سيتم احتساب الإجابات الحالية.');
-                        submitAnswers();
+                        // Ouvrir la page de saisie manuelle
+                        showManualScore();
                     }
                 }, 1000);
             }
@@ -874,6 +907,49 @@
                 updateTimerDisplay();
                 document.getElementById('timerDisplay').classList.remove('warning');
                 isTimerRunning = false;
+                isTimeEnded = false;
+            }
+
+            // ======================== MANUAL SCORE ========================
+            function showManualScore() {
+                stopTimer();
+                isTimeEnded = true;
+                
+                // Calculer les scores à partir des réponses enregistrées
+                const teamScores = [0, 0, 0, 0, 0];
+                for (let q = 0; q < 5; q++) {
+                    for (let t = 0; t < 5; t++) {
+                        const key = `${q}-${t}`;
+                        if (currentAnswers[key]) {
+                            teamScores[t]++;
+                        }
+                    }
+                }
+                manualScores = [...teamScores];
+                
+                let html = '';
+                for (let i = 0; i < 5; i++) {
+                    html += `<div class="manual-score-row">
+                        <label>${getTeamName(i)}</label>
+                        <input type="number" min="0" max="5" value="${manualScores[i]}" class="manual-score-input" data-team="${i}">
+                        <span class="score-display">/ 5</span>
+                    </div>`;
+                }
+                document.getElementById('manual-score-container').innerHTML = html;
+                
+                // Ajouter les événements pour mise à jour en direct
+                document.querySelectorAll('.manual-score-input').forEach(inp => {
+                    inp.addEventListener('input', function() {
+                        const team = parseInt(this.dataset.team);
+                        let val = parseInt(this.value) || 0;
+                        if (val < 0) val = 0;
+                        if (val > 5) val = 5;
+                        manualScores[team] = val;
+                        this.value = val;
+                    });
+                });
+                
+                showPage('page-manual-score');
             }
 
             // ======================== RENDU ========================
@@ -949,7 +1025,8 @@
                 document.getElementById('domain-title').textContent = `📖 المجال: ${names[domainIdx]}`;
                 
                 currentAnswers = {};
-                scoreForCurrentDomain = [0, 0, 0, 0, 0];
+                manualScores = [0, 0, 0, 0, 0];
+                isTimeEnded = false;
                 
                 let html = '';
                 qs.forEach((q, idx) => {
@@ -966,18 +1043,17 @@
                 });
                 document.getElementById('questions-list').innerHTML = html;
                 
-                // Réinitialiser le timer
                 resetTimer();
                 showPage('page-questions');
-                
-                // Démarrer le timer après un court délai
                 setTimeout(() => startTimer(), 500);
             }
 
-            // Fonction globale pour toggle les réponses
             window.toggleAnswer = function(questionIdx, teamIdx) {
+                if (isTimeEnded) {
+                    alert('⚠️ انتهى الوقت! لا يمكنك تغيير الإجابات.');
+                    return;
+                }
                 if (!isTimerRunning && timeLeft > 0) {
-                    // Si le timer n'est pas encore démarré, on le démarre
                     startTimer();
                 }
                 
@@ -993,50 +1069,6 @@
                     }
                 }
             };
-
-            function submitAnswers() {
-                stopTimer();
-                
-                // Compter les points pour chaque équipe
-                const teamScores = [0, 0, 0, 0, 0];
-                for (let q = 0; q < 5; q++) {
-                    for (let t = 0; t < 5; t++) {
-                        const key = `${q}-${t}`;
-                        if (currentAnswers[key]) {
-                            teamScores[t]++;
-                        }
-                    }
-                }
-                
-                scoreForCurrentDomain = teamScores;
-                
-                // Afficher le résumé
-                let html = `<div class="score-summary">
-                    <h3>📊 نتائج المجال</h3>
-                    <table>
-                        <thead><tr><th>الفريق</th><th>الإجابات الصحيحة</th><th>/5</th></tr></thead>
-                        <tbody>`;
-                teamScores.forEach((score, idx) => {
-                    html += `<tr>
-                        <td><strong>${getTeamName(idx)}</strong></td>
-                        <td style="font-size:1.5rem; font-weight:700; color:var(--btn-success);">${score}</td>
-                        <td>/ 5</td>
-                    </tr>`;
-                });
-                html += `</tbody></table>
-                    <div style="margin-top:15px; font-size:0.9rem; color:var(--text-muted);">
-                        ⏱️ الوقت المستغرق: ${formatTime(data.timerDuration - timeLeft)}
-                    </div>
-                </div>`;
-                document.getElementById('score-summary-container').innerHTML = html;
-                showPage('page-score');
-            }
-
-            function formatTime(seconds) {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            }
 
             function showRanking(domainIdx) {
                 const scores = data.scores[domainIdx] || [0,0,0,0,0];
@@ -1199,6 +1231,32 @@
                 historyDiv.innerHTML = histHtml;
             }
 
+            // ======================== RESET SCORES ========================
+            function resetAllScores() {
+                if (!confirm('⚠️ هل أنت متأكد من إعادة تعيين جميع النقاط؟\nسيتم الاحتفاظ بالفرق والأعضاء ولكن ستعاد جميع النقاط إلى الصفر وستتاح جميع المجالات للعب مرة أخرى.')) {
+                    return;
+                }
+                
+                // Réinitialiser les scores
+                for (let d = 0; d < 8; d++) {
+                    data.scores[d] = [0, 0, 0, 0, 0];
+                }
+                if (data.scores[8]) data.scores[8] = [0, 0, 0, 0, 0];
+                
+                // Réinitialiser les domaines joués
+                data.playedDomains = [];
+                data.history = [];
+                data.winner = null;
+                data.tieMode = false;
+                data.tieRound = 0;
+                data.currentDomain = null;
+                
+                saveData();
+                
+                // Recharger la page pour tout réinitialiser
+                location.reload();
+            }
+
             // ======================== INIT ========================
             function init() {
                 // Theme
@@ -1247,6 +1305,10 @@
                     renderTeamsInput();
                 });
 
+                document.getElementById('btn-reset-scores').addEventListener('click', function(){
+                    resetAllScores();
+                });
+
                 document.getElementById('btn-back-home').addEventListener('click', function(){
                     showPage('page-home');
                 });
@@ -1285,7 +1347,8 @@
                     renderDomains();
                 });
 
-                document.getElementById('btn-back-domains-from-score').addEventListener('click', function(){
+                document.getElementById('btn-back-domains-from-manual').addEventListener('click', function(){
+                    stopTimer();
                     showPage('page-domains');
                     renderDomains();
                 });
@@ -1295,22 +1358,41 @@
                     renderDomains();
                 });
 
-                document.getElementById('btn-submit-answers').addEventListener('click', function(){
-                    submitAnswers();
+                // Bouton "انتهى الوقت" - ouvre la page de saisie manuelle
+                document.getElementById('btn-time-end').addEventListener('click', function(){
+                    if (isTimerRunning || timeLeft > 0) {
+                        if (!confirm('⚠️ هل أنت متأكد من إنهاء الوقت؟ سيتم فتح صفحة إدخال النقاط يدوياً.')) {
+                            return;
+                        }
+                    }
+                    stopTimer();
+                    showManualScore();
                 });
 
-                document.getElementById('btn-next-round').addEventListener('click', function(){
+                // Confirmer les scores manuels
+                document.getElementById('btn-confirm-manual-score').addEventListener('click', function(){
                     if (domainBeingPlayed === null) return;
+                    
+                    // Récupérer les scores manuels
+                    const inputs = document.querySelectorAll('.manual-score-input');
+                    const scores = [];
+                    inputs.forEach(inp => {
+                        let val = parseInt(inp.value) || 0;
+                        if (val < 0) val = 0;
+                        if (val > 5) val = 5;
+                        scores.push(val);
+                    });
+                    manualScores = scores;
                     
                     // Sauvegarder les scores
                     if (!data.scores[domainBeingPlayed]) data.scores[domainBeingPlayed] = [0,0,0,0,0];
-                    scoreForCurrentDomain.forEach((s, idx) => {
+                    manualScores.forEach((s, idx) => {
                         data.scores[domainBeingPlayed][idx] = Math.min(5, Math.max(0, s));
                     });
                     if (!data.playedDomains.includes(domainBeingPlayed)) {
                         data.playedDomains.push(domainBeingPlayed);
                     }
-                    data.history.push({ domain: domainBeingPlayed, scores: [...scoreForCurrentDomain], timestamp: new Date().toLocaleString() });
+                    data.history.push({ domain: domainBeingPlayed, scores: [...manualScores], timestamp: new Date().toLocaleString() });
                     saveData();
                     
                     showRanking(domainBeingPlayed);
@@ -1374,7 +1456,7 @@
                 });
 
                 document.getElementById('btn-reset-all').addEventListener('click', function(){
-                    if (confirm('هل أنت متأكد من إعادة تعيين المسابقة؟ سيتم حذف جميع البيانات.')) {
+                    if (confirm('هل أنت متأكد من إعادة تعيين المسابقة بالكامل؟ سيتم حذف جميع البيانات.')) {
                         localStorage.removeItem(STORAGE_KEY);
                         location.reload();
                     }
