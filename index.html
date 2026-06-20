@@ -799,6 +799,9 @@
                 <button class="btn btn-secondary" id="btn-back-domains">🔙 رجوع للرئيسية</button>
                 <button class="btn btn-warning" id="btn-tiebreaker">⚖️ الاحتياط</button>
             </div>
+            <div class="flex-row" style="margin-top:15px;">
+                <button class="btn btn-danger" id="btn-reset-scores">🔄 إعادة تعيين النقاط فقط</button>
+            </div>
             <h3 style="margin-top: 35px;">📊 جدول الترتيب العام</h3>
             <div id="score-table-wrapper"></div>
         </div>
@@ -832,7 +835,9 @@
         <div id="page-winner" class="page">
             <div class="center" style="padding: 40px 0;">
                 <h1 style="font-size: 3.5rem; color: var(--btn-success);">🎉 مبروك <span id="winner-name"></span> الفوز بالمسابقة الثقافية 🎉</h1>
-                <button class="btn btn-secondary" id="btn-reset-all">🔄 إعادة تعيين المسابقة</button>
+                <div class="flex-row" style="margin-top: 30px;">
+                    <button class="btn btn-secondary" id="btn-reset-all">🔄 إعادة تعيين المسابقة</button>
+                </div>
             </div>
         </div>
 
@@ -1033,6 +1038,31 @@
                 }
             }
 
+            function playWinnerMusic() {
+                try {
+                    if (backgroundAudio) {
+                        backgroundAudio.pause();
+                        backgroundAudio = null;
+                    }
+                    backgroundAudio = new Audio('Award Music Winner.mp3');
+                    backgroundAudio.loop = false;
+                    backgroundAudio.volume = 0.7;
+                    const promise = backgroundAudio.play();
+                    if (promise !== undefined) {
+                        promise.then(() => {
+                            isMusicPlaying = true;
+                            updateMusicUI();
+                        }).catch(() => {
+                            isMusicPlaying = false;
+                            updateMusicUI();
+                        });
+                    }
+                } catch (e) {
+                    isMusicPlaying = false;
+                    updateMusicUI();
+                }
+            }
+
             function stopMusic() {
                 if (backgroundAudio) {
                     backgroundAudio.pause();
@@ -1056,6 +1086,8 @@
                             playMusic('04 Meet Today\'s Contestants.mp3');
                         } else if (id === 'page-questions' || id === 'page-domains') {
                             playMusic('66 Phone-A-Friend.mp3');
+                        } else if (id === 'page-winner') {
+                            playWinnerMusic();
                         } else {
                             playMusic('03 Explain The Rules.mp3');
                         }
@@ -1077,7 +1109,31 @@
                 }
             }
 
-            document.getElementById('musicToggle').addEventListener('click', toggleMusic);
+            // ===== BOUTON MUSIQUE =====
+            const musicToggleBtn = document.getElementById('musicToggle');
+            if (musicToggleBtn) {
+                musicToggleBtn.addEventListener('click', toggleMusic);
+            }
+
+            // ===== BOUTON THEME =====
+            const themeToggleBtn = document.getElementById('themeToggle');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const newTheme = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    const icon = document.getElementById('themeIcon');
+                    const label = document.getElementById('themeLabel');
+                    if (newTheme === 'dark') {
+                        icon.textContent = '☀️';
+                        label.textContent = 'نهاري';
+                    } else {
+                        icon.textContent = '🌙';
+                        label.textContent = 'ليلي';
+                    }
+                });
+            }
 
             // ===== SONS (EFFETS) =====
             function playSound(type) {
@@ -1186,17 +1242,23 @@
 
             // ===== NAVIGATION =====
             // Accueil -> Règles
-            document.getElementById('doorCompetition').addEventListener('click', function() {
-                showPage('page-rules');
-                playMusic('03 Explain The Rules.mp3');
-            });
+            const doorCompetition = document.getElementById('doorCompetition');
+            if (doorCompetition) {
+                doorCompetition.addEventListener('click', function() {
+                    showPage('page-rules');
+                    playMusic('03 Explain The Rules.mp3');
+                });
+            }
 
             // Règles -> Équipe 1
-            document.getElementById('btn-start-registration').addEventListener('click', function() {
-                data.currentTeamIndex = 0;
-                showPage('page-team-0');
-                playMusic('04 Meet Today\'s Contestants.mp3');
-            });
+            const startRegistrationBtn = document.getElementById('btn-start-registration');
+            if (startRegistrationBtn) {
+                startRegistrationBtn.addEventListener('click', function() {
+                    data.currentTeamIndex = 0;
+                    showPage('page-team-0');
+                    playMusic('04 Meet Today\'s Contestants.mp3');
+                });
+            }
 
             // Navigation entre les équipes
             document.querySelectorAll('.next-team').forEach(btn => {
@@ -1222,27 +1284,30 @@
             });
 
             // Dernière équipe -> Domaines
-            document.getElementById('btn-finish-teams').addEventListener('click', function() {
-                const nameInput = document.getElementById('team-name-4');
-                if (nameInput) {
-                    data.teams[4] = nameInput.value.trim() || 'فريق 5';
-                }
-                const members = document.querySelectorAll(`.member-input[data-team="4"]`);
-                if (!data.members[4]) data.members[4] = [];
-                members.forEach((inp, idx) => {
-                    data.members[4][idx] = inp.value.trim();
-                });
-                saveData();
+            const finishTeamsBtn = document.getElementById('btn-finish-teams');
+            if (finishTeamsBtn) {
+                finishTeamsBtn.addEventListener('click', function() {
+                    const nameInput = document.getElementById('team-name-4');
+                    if (nameInput) {
+                        data.teams[4] = nameInput.value.trim() || 'فريق 5';
+                    }
+                    const members = document.querySelectorAll(`.member-input[data-team="4"]`);
+                    if (!data.members[4]) data.members[4] = [];
+                    members.forEach((inp, idx) => {
+                        data.members[4][idx] = inp.value.trim();
+                    });
+                    saveData();
 
-                const empty = data.teams.some(t => t.trim() === '');
-                if (empty) {
-                    alert('⚠️ يرجى إدخال أسماء جميع الفرق.');
-                    return;
-                }
-                showPage('page-domains');
-                renderDomains();
-                stopMusic();
-            });
+                    const empty = data.teams.some(t => t.trim() === '');
+                    if (empty) {
+                        alert('⚠️ يرجى إدخال أسماء جميع الفرق.');
+                        return;
+                    }
+                    showPage('page-domains');
+                    renderDomains();
+                    stopMusic();
+                });
+            }
 
             // ===== RENDU DES DOMAINES =====
             function renderDomains() {
@@ -1319,31 +1384,34 @@
             };
 
             // ===== SOUMISSION DES RÉPONSES =====
-            document.getElementById('btn-submit-answers').addEventListener('click', function() {
-                if (domainBeingPlayed === null) return;
-                stopTimer();
-                stopMusic();
+            const submitAnswersBtn = document.getElementById('btn-submit-answers');
+            if (submitAnswersBtn) {
+                submitAnswersBtn.addEventListener('click', function() {
+                    if (domainBeingPlayed === null) return;
+                    stopTimer();
+                    stopMusic();
 
-                const teamScores = [0, 0, 0, 0, 0];
-                for (let q = 0; q < 5; q++) {
-                    for (let t = 0; t < 5; t++) {
-                        const key = `${q}-${t}`;
-                        if (currentAnswers[key]) teamScores[t]++;
+                    const teamScores = [0, 0, 0, 0, 0];
+                    for (let q = 0; q < 5; q++) {
+                        for (let t = 0; t < 5; t++) {
+                            const key = `${q}-${t}`;
+                            if (currentAnswers[key]) teamScores[t]++;
+                        }
                     }
-                }
 
-                if (!data.scores[domainBeingPlayed]) data.scores[domainBeingPlayed] = [0, 0, 0, 0, 0];
-                teamScores.forEach((s, idx) => {
-                    data.scores[domainBeingPlayed][idx] = Math.min(5, Math.max(0, s));
+                    if (!data.scores[domainBeingPlayed]) data.scores[domainBeingPlayed] = [0, 0, 0, 0, 0];
+                    teamScores.forEach((s, idx) => {
+                        data.scores[domainBeingPlayed][idx] = Math.min(5, Math.max(0, s));
+                    });
+                    if (!data.playedDomains.includes(domainBeingPlayed)) {
+                        data.playedDomains.push(domainBeingPlayed);
+                    }
+                    data.history.push({ domain: domainBeingPlayed, scores: [...teamScores], timestamp: new Date().toLocaleString() });
+                    saveData();
+
+                    showRanking(domainBeingPlayed);
                 });
-                if (!data.playedDomains.includes(domainBeingPlayed)) {
-                    data.playedDomains.push(domainBeingPlayed);
-                }
-                data.history.push({ domain: domainBeingPlayed, scores: [...teamScores], timestamp: new Date().toLocaleString() });
-                saveData();
-
-                showRanking(domainBeingPlayed);
-            });
+            }
 
             // ===== RANKING =====
             function showRanking(domainIdx) {
@@ -1360,15 +1428,18 @@
                 showPage('page-ranking');
             }
 
-            document.getElementById('btn-finish-round').addEventListener('click', function() {
-                showPage('page-domains');
-                renderDomains();
-                if (allDomainsPlayed()) {
-                    if (!checkWinner()) {
-                        showTiebreaker();
+            const finishRoundBtn = document.getElementById('btn-finish-round');
+            if (finishRoundBtn) {
+                finishRoundBtn.addEventListener('click', function() {
+                    showPage('page-domains');
+                    renderDomains();
+                    if (allDomainsPlayed()) {
+                        if (!checkWinner()) {
+                            showTiebreaker();
+                        }
                     }
-                }
-            });
+                });
+            }
 
             // ===== TABLEAU DES SCORES =====
             function renderScoreTable() {
@@ -1403,21 +1474,25 @@
                     saveData();
                     document.getElementById('winner-name').textContent = getTeamName(winnerIdx);
                     showPage('page-winner');
+                    playWinnerMusic();
                     return true;
                 }
                 return false;
             }
 
             // ===== TIEBREAKER =====
-            document.getElementById('btn-tiebreaker').addEventListener('click', function() {
-                if (allDomainsPlayed()) {
-                    const tied = getTiedTeams();
-                    if (tied.length > 1) showTiebreaker();
-                    else alert('لا يوجد تعادل حالياً.');
-                } else {
-                    alert('⚠️ لا يمكن استخدام الاحتياط إلا بعد انتهاء جميع المجالات.');
-                }
-            });
+            const tiebreakerBtn = document.getElementById('btn-tiebreaker');
+            if (tiebreakerBtn) {
+                tiebreakerBtn.addEventListener('click', function() {
+                    if (allDomainsPlayed()) {
+                        const tied = getTiedTeams();
+                        if (tied.length > 1) showTiebreaker();
+                        else alert('لا يوجد تعادل حالياً.');
+                    } else {
+                        alert('⚠️ لا يمكن استخدام الاحتياط إلا بعد انتهاء جميع المجالات.');
+                    }
+                });
+            }
 
             function showTiebreaker() {
                 const tied = getTiedTeams();
@@ -1452,60 +1527,73 @@
                 showPage('page-tiebreaker');
             }
 
-            document.getElementById('btn-tie-submit').addEventListener('click', function() {
-                const inputs = document.querySelectorAll('.tie-score-input');
-                if (!inputs.length) return;
-                const scores = {};
-                let allZero = true;
-                inputs.forEach(inp => {
-                    const team = parseInt(inp.dataset.team);
-                    const val = parseInt(inp.value) || 0;
-                    scores[team] = Math.min(3, Math.max(0, val));
-                    if (val > 0) allZero = false;
-                });
-                if (allZero) {
-                    alert('الرجاء إدخال نقاط للفرق المتعادلة.');
-                    return;
-                }
-                if (!data.scores[8]) data.scores[8] = [0, 0, 0, 0, 0];
-                for (let team in scores) {
-                    data.scores[8][parseInt(team)] = (data.scores[8][parseInt(team)] || 0) + scores[team];
-                }
-                saveData();
-
-                const winnerIdx = getWinnerIndex();
-                if (winnerIdx !== null) {
-                    data.winner = winnerIdx;
+            const tieSubmitBtn = document.getElementById('btn-tie-submit');
+            if (tieSubmitBtn) {
+                tieSubmitBtn.addEventListener('click', function() {
+                    const inputs = document.querySelectorAll('.tie-score-input');
+                    if (!inputs.length) return;
+                    const scores = {};
+                    let allZero = true;
+                    inputs.forEach(inp => {
+                        const team = parseInt(inp.dataset.team);
+                        const val = parseInt(inp.value) || 0;
+                        scores[team] = Math.min(3, Math.max(0, val));
+                        if (val > 0) allZero = false;
+                    });
+                    if (allZero) {
+                        alert('الرجاء إدخال نقاط للفرق المتعادلة.');
+                        return;
+                    }
+                    if (!data.scores[8]) data.scores[8] = [0, 0, 0, 0, 0];
+                    for (let team in scores) {
+                        data.scores[8][parseInt(team)] = (data.scores[8][parseInt(team)] || 0) + scores[team];
+                    }
                     saveData();
-                    document.getElementById('winner-name').textContent = getTeamName(winnerIdx);
-                    showPage('page-winner');
-                } else {
-                    alert('لا يزال هناك تعادل، سيتم تكرار جولة الاحتياط بأسئلة جديدة.');
-                    showTiebreaker();
-                }
-            });
+
+                    const winnerIdx = getWinnerIndex();
+                    if (winnerIdx !== null) {
+                        data.winner = winnerIdx;
+                        saveData();
+                        document.getElementById('winner-name').textContent = getTeamName(winnerIdx);
+                        showPage('page-winner');
+                        playWinnerMusic();
+                    } else {
+                        alert('لا يزال هناك تعادل، سيتم تكرار جولة الاحتياط بأسئلة جديدة.');
+                        showTiebreaker();
+                    }
+                });
+            }
 
             // ===== ADMIN =====
-            document.getElementById('btn-admin').addEventListener('click', function() { showPage('page-admin');
-                renderTieQuestionsList(); });
-            document.getElementById('btn-admin-top').addEventListener('click', function() { showPage('page-admin');
-                renderTieQuestionsList(); });
-
-            document.getElementById('btn-admin-login').addEventListener('click', function() {
-                const pass = document.getElementById('admin-password').value;
-                if (pass === data.adminPassword) {
-                    document.getElementById('admin-content').classList.remove('hidden');
-                    loadAdminContent();
+            const adminBtn = document.getElementById('btn-admin');
+            if (adminBtn) {
+                adminBtn.addEventListener('click', function() {
+                    showPage('page-admin');
                     renderTieQuestionsList();
-                } else {
-                    alert('❌ كلمة مرور خاطئة');
-                }
-            });
+                });
+            }
 
-            document.getElementById('btn-admin-close').addEventListener('click', function() {
-                showPage('page-domains');
-                renderDomains();
-            });
+            const adminLoginBtn = document.getElementById('btn-admin-login');
+            if (adminLoginBtn) {
+                adminLoginBtn.addEventListener('click', function() {
+                    const pass = document.getElementById('admin-password').value;
+                    if (pass === data.adminPassword) {
+                        document.getElementById('admin-content').classList.remove('hidden');
+                        loadAdminContent();
+                        renderTieQuestionsList();
+                    } else {
+                        alert('❌ كلمة مرور خاطئة');
+                    }
+                });
+            }
+
+            const adminCloseBtn = document.getElementById('btn-admin-close');
+            if (adminCloseBtn) {
+                adminCloseBtn.addEventListener('click', function() {
+                    showPage('page-domains');
+                    renderDomains();
+                });
+            }
 
             function renderTieQuestionsList() {
                 const container = document.getElementById('tie-questions-list');
@@ -1540,16 +1628,19 @@
                 }
             };
 
-            document.getElementById('btn-add-tie-question').addEventListener('click', function() {
-                const input = document.getElementById('new-tie-question');
-                const question = input.value.trim();
-                if (!question) { alert('الرجاء كتابة سؤال.'); return; }
-                if (!data.tieQuestionsPool) data.tieQuestionsPool = [];
-                data.tieQuestionsPool.push(question);
-                saveData();
-                input.value = '';
-                renderTieQuestionsList();
-            });
+            const addTieQuestionBtn = document.getElementById('btn-add-tie-question');
+            if (addTieQuestionBtn) {
+                addTieQuestionBtn.addEventListener('click', function() {
+                    const input = document.getElementById('new-tie-question');
+                    const question = input.value.trim();
+                    if (!question) { alert('الرجاء كتابة سؤال.'); return; }
+                    if (!data.tieQuestionsPool) data.tieQuestionsPool = [];
+                    data.tieQuestionsPool.push(question);
+                    saveData();
+                    input.value = '';
+                    renderTieQuestionsList();
+                });
+            }
 
             function loadAdminContent() {
                 const container = document.getElementById('admin-domains-list');
@@ -1587,92 +1678,75 @@
                 historyDiv.innerHTML = histHtml;
             }
 
-            // ===== RÉINITIALISATION COMPLÈTE =====
-            // Réinitialiser toute la compétition (efface tout)
-            document.getElementById('btn-reset-all').addEventListener('click', function() {
-                if (confirm('⚠️ هل أنت متأكد من إعادة تعيين المسابقة بالكامل؟\nسيتم حذف جميع البيانات بما في ذلك الفرق والأسئلة.')) {
-                    localStorage.removeItem(STORAGE_KEY);
+            // ===== RÉINITIALISATION =====
+            // Réinitialiser toute la compétition
+            const resetAllBtn = document.getElementById('btn-reset-all');
+            if (resetAllBtn) {
+                resetAllBtn.addEventListener('click', function() {
+                    if (confirm('⚠️ هل أنت متأكد من إعادة تعيين المسابقة بالكامل؟\nسيتم حذف جميع البيانات بما في ذلك الفرق والأسئلة.')) {
+                        localStorage.removeItem(STORAGE_KEY);
+                        location.reload();
+                    }
+                });
+            }
+
+            // Réinitialiser uniquement les scores
+            const resetScoresBtn = document.getElementById('btn-reset-scores');
+            if (resetScoresBtn) {
+                resetScoresBtn.addEventListener('click', function() {
+                    if (!confirm('⚠️ هل أنت متأكد من إعادة تعيين جميع النقاط؟\nسيتم الاحتفاظ بالفرق والأعضاء ولكن ستعاد جميع النقاط إلى الصفر وستتاح جميع المجالات للعب مرة أخرى.')) {
+                        return;
+                    }
+                    for (let d = 0; d < 8; d++) data.scores[d] = [0, 0, 0, 0, 0];
+                    if (data.scores[8]) data.scores[8] = [0, 0, 0, 0, 0];
+                    data.playedDomains = [];
+                    data.history = [];
+                    data.winner = null;
+                    data.tieRound = 0;
+                    saveData();
                     location.reload();
-                }
-            });
+                });
+            }
 
-            // Réinitialiser uniquement les scores (garde les équipes)
-            // Ajout d'un bouton dans la page des domaines pour réinitialiser les scores
-            const resetScoresBtn = document.createElement('button');
-            resetScoresBtn.className = 'btn btn-danger';
-            resetScoresBtn.textContent = '🔄 إعادة تعيين النقاط فقط';
-            resetScoresBtn.style.margin = '10px 5px';
-            resetScoresBtn.addEventListener('click', function() {
-                if (!confirm('⚠️ هل أنت متأكد من إعادة تعيين جميع النقاط؟\nسيتم الاحتفاظ بالفرق والأعضاء ولكن ستعاد جميع النقاط إلى الصفر وستتاح جميع المجالات للعب مرة أخرى.')) {
-                    return;
-                }
-                for (let d = 0; d < 8; d++) data.scores[d] = [0, 0, 0, 0, 0];
-                if (data.scores[8]) data.scores[8] = [0, 0, 0, 0, 0];
-                data.playedDomains = [];
-                data.history = [];
-                data.winner = null;
-                data.tieRound = 0;
-                saveData();
-                location.reload();
-            });
+            // ===== BOUTONS DE RETOUR =====
+            const backDomainsBtn = document.getElementById('btn-back-domains');
+            if (backDomainsBtn) {
+                backDomainsBtn.addEventListener('click', function() {
+                    showPage('page-home');
+                    stopMusic();
+                });
+            }
 
-            // Ajouter le bouton dans la page des domaines
-            document.addEventListener('DOMContentLoaded', function() {
-                const domainsPage = document.getElementById('page-domains');
-                const existingButtons = domainsPage.querySelector('.flex-row');
-                if (existingButtons) {
-                    existingButtons.appendChild(resetScoresBtn);
-                } else {
-                    const container = document.createElement('div');
-                    container.className = 'flex-row';
-                    container.style.marginTop = '15px';
-                    container.appendChild(resetScoresBtn);
-                    domainsPage.appendChild(container);
-                }
-            });
+            const backFromQBtn = document.getElementById('btn-back-domains-from-q');
+            if (backFromQBtn) {
+                backFromQBtn.addEventListener('click', function() {
+                    stopTimer();
+                    stopMusic();
+                    showPage('page-domains');
+                    renderDomains();
+                });
+            }
 
-            // Boutons de retour qui fonctionnent
-            document.getElementById('btn-back-domains').addEventListener('click', function() {
-                showPage('page-home');
-                stopMusic();
-            });
+            const backTieBtn = document.getElementById('btn-back-domains-tie');
+            if (backTieBtn) {
+                backTieBtn.addEventListener('click', function() {
+                    showPage('page-domains');
+                    renderDomains();
+                });
+            }
 
-            document.getElementById('btn-back-domains-from-q').addEventListener('click', function() {
-                stopTimer();
-                stopMusic();
-                showPage('page-domains');
-                renderDomains();
-            });
-
-            document.getElementById('btn-back-domains-tie').addEventListener('click', function() {
-                showPage('page-domains');
-                renderDomains();
-            });
-
-            document.getElementById('btn-back-home').addEventListener('click', function() {
-                showPage('page-home');
-                stopMusic();
-            });
-
-            // ===== THÈME =====
+            // ===== THÈME INITIAL =====
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             const icon = document.getElementById('themeIcon');
             const label = document.getElementById('themeLabel');
-            if (savedTheme === 'dark') { icon.textContent = '☀️';
-                label.textContent = 'نهاري'; } else { icon.textContent = '🌙';
-                label.textContent = 'ليلي'; }
-
-            document.getElementById('themeToggle').addEventListener('click', function() {
-                const current = document.documentElement.getAttribute('data-theme');
-                const newTheme = current === 'dark' ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                if (newTheme === 'dark') { document.getElementById('themeIcon').textContent = '☀️';
-                    document.getElementById('themeLabel').textContent = 'نهاري'; } else { document.getElementById(
-                        'themeIcon').textContent = '🌙';
-                    document.getElementById('themeLabel').textContent = 'ليلي'; }
-            });
+            if (savedTheme === 'dark') {
+                icon.textContent = '☀️';
+                label.textContent = 'نهاري';
+            } else {
+                icon.textContent = '🌙';
+                label.textContent = 'ليلي';
+            }
 
             // ===== INITIALISATION =====
             window.onload = function() {
@@ -1689,6 +1763,7 @@
                     if (allDomainsPlayed()) {
                         document.getElementById('winner-name').textContent = getTeamName(data.winner);
                         showPage('page-winner');
+                        playWinnerMusic();
                     }
                 }
             };
